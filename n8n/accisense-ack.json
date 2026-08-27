@@ -1,0 +1,176 @@
+{
+  "name": "AcciSense ACK",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "accisense-ack",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "ack-webhook",
+      "name": "ACK Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "accisense-ack"
+    },
+    {
+      "parameters": {
+        "jsCode": "const callback = $json.body?.callback_query;\n\nif (!callback) {\n  throw new Error('Telegram callback_query was not received');\n}\n\nreturn [{\n  json: {\n    acci_id: callback.data?.replace('ack:', '') ?? '',\n    chat_id: callback.message?.chat?.id ?? '',\n    message_id: callback.message?.message_id ?? '',\n    callback_data: callback.data ?? '',\n    callback_query_id: callback.id ?? ''\n  }\n}];"
+      },
+      "id": "parse-ack",
+      "name": "Parse ACK",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nif (!data.acci_id) {\n  throw new Error('AcciSense ID is missing');\n}\n\nreturn [{\n  json: {\n    ...data,\n    api_endpoint: `/incidents/${data.acci_id}/acknowledge`\n  }\n}];"
+      },
+      "id": "extract-acci-id",
+      "name": "Extract AcciSense ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_ACCISENSE_API_URL/incidents/{{ $json.acci_id }}/acknowledge",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": false,
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "acknowledge-incident",
+      "name": "Acknowledge Incident",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $('Parse ACK').item.json;\nconst response = $json;\n\nconst statusCode = response.statusCode ?? response.status ?? 200;\nconst success = statusCode >= 200 && statusCode < 300;\n\nreturn [{\n  json: {\n    ...original,\n    success,\n    status_code: statusCode,\n    telegram_text: success\n      ? `✅ ACCISENSE — ACKNOWLEDGED\\n\\nAlert ID: ${original.acci_id}\\nStatus: ACKNOWLEDGED\\n\\nThis message was updated automatically with n8n.`\n      : `⚠️ ACCISENSE — ACK COULD NOT BE PROCESSED\\n\\nAlert ID: ${original.acci_id}\\n\\nNo action was taken.`\n  }\n}];"
+      },
+      "id": "prepare-telegram-update",
+      "name": "Prepare Telegram Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "editMessageText",
+        "chatId": "={{ $('Parse ACK').item.json.chat_id }}",
+        "messageId": "={{ $('Parse ACK').item.json.message_id }}",
+        "text": "={{ $json.telegram_text }}",
+        "additionalFields": {}
+      },
+      "id": "update-telegram",
+      "name": "Update Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "ACK Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse ACK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse ACK": {
+      "main": [
+        [
+          {
+            "node": "Extract AcciSense ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract AcciSense ID": {
+      "main": [
+        [
+          {
+            "node": "Acknowledge Incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acknowledge Incident": {
+      "main": [
+        [
+          {
+            "node": "Prepare Telegram Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Telegram Update": {
+      "main": [
+        [
+          {
+            "node": "Update Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "sanitized-template",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

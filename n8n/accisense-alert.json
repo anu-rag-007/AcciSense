@@ -1,0 +1,109 @@
+{
+  "name": "AcciSense Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "accisense-alert",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "accisense-alert-webhook",
+      "name": "AcciSense Alert Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "accisense-alert"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\n\nconst acci_id = body.acci_id ?? body.alert_id ?? `AC-${Date.now()}`;\nconst severity = body.severity ?? 'HIGH';\nconst incident = body.incident ?? body.message ?? 'Incident detected';\nconst location = body.location ?? 'Unknown';\n\nreturn [{\n  json: {\n    acci_id,\n    severity,\n    incident,\n    location,\n    received_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "parse-alert",
+      "name": "Parse Incident",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $json;\n\nreturn [{\n  json: {\n    ...data,\n    telegram_text: `🚨 ACCISENSE — INCIDENT ALERT\\n\\nAlert ID: ${data.acci_id}\\nSeverity: ${data.severity}\\nIncident: ${data.incident}\\nLocation: ${data.location}\\n\\n⚠️ Acknowledgement required.`\n  }\n}];"
+      },
+      "id": "build-alert",
+      "name": "Build Telegram Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.telegram_text }}",
+        "additionalFields": {}
+      },
+      "id": "send-telegram-alert",
+      "name": "Send Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        720,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "AcciSense Alert Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Incident": {
+      "main": [
+        [
+          {
+            "node": "Build Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "sanitized-template",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AcciSense | Accident Response System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #080b10;
+            color: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        /* ---------- HEADER ---------- */
+
+        header {
+            height: 70px;
+            border-bottom: 1px solid #20252d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 45px;
+            background: #0b0f15;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-mark {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: #ff3b30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .logo-text {
+            font-size: 21px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
+
+        /* ---------- MAIN ---------- */
+
+        main {
+            max-width: 1200px;
+            margin: auto;
+            padding: 55px 30px;
+        }
+
+        .hero {
+            margin-bottom: 35px;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            color: #8e98a7;
+            font-size: 16px;
+        }
+
+        .accent {
+            color: #ff3b30;
+        }
+
+        /* ---------- GRID ---------- */
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .card {
+            background: #0d1219;
+            border: 1px solid #202733;
+            border-radius: 14px;
+            padding: 28px;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-bottom: 24px;
+        }
+
+        /* ---------- FORM ---------- */
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px 14px;
+            background: #080b10;
+            border: 1px solid #29313c;
+            color: #ffffff;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #ff3b30;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #ff3b30;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #e63228;
+        }
+
+        button:disabled {
+            background: #55201d;
+            cursor: not-allowed;
+        }
+
+        /* ---------- RESULT ---------- */
+
+        .empty-state {
+            height: 100%;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #687281;
+        }
+
+        .empty-icon {
+            font-size: 42px;
+            margin-bottom: 15px;
+        }
+
+        .incident-result {
+            display: none;
+        }
+
+        .incident-id {
+            font-family: monospace;
+            color: #8e98a7;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        .critical-banner {
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.4);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 22px;
+        }
+
+        .critical-title {
+            color: #ff5148;
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .critical-subtitle {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .data-box {
+            background: #080b10;
+            border: 1px solid #202733;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .data-label {
+            font-size: 11px;
+            color: #687281;
+            margin-bottom: 7px;
+        }
+
+        .data-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .priority {
+            color: #ff5148;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #9ca3af;
+            padding: 20px;
+        }
+
+        .error {
+            display: none;
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            color: #ff8179;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        /* ---------- FOOTER ---------- */
+
+        footer {
+            text-align: center;
+            color: #4b5563;
+            font-size: 12px;
+            padding: 30px;
+        }
+
+        /* ---------- MOBILE ---------- */
+
+        @media (max-width: 800px) {
+            header {
+                padding: 0 20px;
+            }
+
+            main {
+                padding: 35px 20px;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <div class="logo">
+
+        <div class="logo-mark">
+            A
+        </div>
+
+        <div class="logo-text">
+            ACCISENSE
+        </div>
+
+    </div>
+
+    <div class="system-status">
+
+        <div class="status-dot"></div>
+
+        SYSTEM ONLINE
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <section class="hero">
+
+        <h1>
+            Intelligent
+            <span class="accent">Accident Response</span>
+        </h1>
+
+        <p>
+            Detect. Analyze. Alert. Escalate.
+        </p>
+
+    </section>
+
+
+    <section class="dashboard">
+
+
+        <!-- INCIDENT FORM -->
+
+        <div class="card">
+
+            <h2>
+                Report Incident
+            </h2>
+
+
+            <div class="form-group">
+
+                <label>
+                    Incident Type
+                </label>
+
+                <select id="incidentType">
+
+                    <option value="vehicle_accident">
+                        Vehicle Accident
+                    </option>
+
+                    <option value="collision">
+                        Collision
+                    </option>
+
+                    <option value="road_incident">
+                        Road Incident
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Location
+                </label>
+
+                <input
+                    id="location"
+                    type="text"
+                    placeholder="Enter incident location"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label>
+                    Severity Indicator
+                </label>
+
+                <select id="severity">
+
+                    <option value="critical">
+                        Critical
+                    </option>
+
+                    <option value="high">
+                        High
+                    </option>
+
+                    <option value="medium">
+                        Medium
+                    </option>
+
+                    <option value="low">
+                        Low
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <button
+                id="submitButton"
+                onclick="submitIncident()"
+            >
+                REPORT INCIDENT
+            </button>
+
+
+            <div
+                class="loading"
+                id="loading"
+            >
+                Processing incident...
+            </div>
+
+
+            <div
+                class="error"
+                id="error"
+            ></div>
+
+        </div>
+
+
+        <!-- RESULT -->
+
+        <div class="card">
+
+            <div
+                class="empty-state"
+                id="emptyState"
+            >
+
+                <div class="empty-icon">
+                    ◉
+                </div>
+
+                <p>
+                    No active incidents
+                </p>
+
+                <small>
+                    Submitted incidents will appear here
+                </small>
+
+            </div>
+
+
+            <div
+                class="incident-result"
+                id="incidentResult"
+            >
+
+                <h2>
+                    Incident Status
+                </h2>
+
+
+                <div
+                    class="incident-id"
+                    id="incidentId"
+                >
+                </div>
+
+
+                <div class="critical-banner">
+
+                    <div
+                        class="critical-title"
+                        id="severityResult"
+                    >
+                    </div>
+
+                    <div class="critical-subtitle">
+
+                        Incident analyzed successfully
+
+                    </div>
+
+                </div>
+
+
+                <div class="data-grid">
+
+
+                    <div class="data-box">
+
+                        <div class="data-label">
+                            INCIDENT TYPE
+                        </div>
+
+                        <div
+                            class="data-value"
+                            id="typeResult"
+                        >
+                        </div>
+
+                    </div>
+
+
+                    <div class="data-box">
+
+                        <div class="data-label">
+                            PRIORITY
+                        </div>
+
+                        <div
+                            class="data-value priority"
+                            id="priorityResult"
+                        >
+                        </div>
+
+                    </div>
+
+
+                    <div class="data-box">
+
+                        <div class="data-label">
+                            LOCATION
+                        </div>
+
+                        <div
+                            class="data-value"
+                            id="locationResult"
+                        >
+                        </div>
+
+                    </div>
+
+
+                    <div class="data-box">
+
+                        <div class="data-label">
+                            STATUS
+                        </div>
+
+                        <div
+                            class="data-value"
+                            id="statusResult"
+                        >
+                            WAITING_FOR_ACK
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div
+                    id="acknowledgementSection"
+                    style="margin-top: 20px;"
+                >
+
+                    <button
+                        id="acknowledgeButton"
+                        onclick="acknowledgeIncident()"
+                    >
+                        ACKNOWLEDGE INCIDENT
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+
+    AcciSense Prototype • Smart Accident Response & Escalation
+
+</footer>
+
+
+<script>
+
+async function submitIncident() {
+
+    const incidentType =
+        document.getElementById("incidentType").value;
+
+    const location =
+        document.getElementById("location").value.trim();
+
+    const severity =
+        document.getElementById("severity").value;
+
+
+    const button =
+        document.getElementById("submitButton");
+
+    const loading =
+        document.getElementById("loading");
+
+    const errorBox =
+        document.getElementById("error");
+
+
+    if (!location) {
+
+        errorBox.innerText =
+            "Please enter an incident location.";
+
+        errorBox.style.display = "block";
+
+        return;
+    }
+
+
+    button.disabled = true;
+
+    loading.style.display = "block";
+
+    errorBox.style.display = "none";
+
+
+    try {
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/incident",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    incident_type: incidentType,
+
+                    location: location,
+
+                    severity_indicator: severity
+
+                })
+
+            }
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Backend returned an error."
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        /*
+         * Hide empty state
+         */
+
+        document.getElementById(
+            "emptyState"
+        ).style.display = "none";
+
+
+        /*
+         * Show result
+         */
+
+        document.getElementById(
+            "incidentResult"
+        ).style.display = "block";
+
+
+        /*
+         * Populate result
+         */
+
+        document.getElementById(
+            "incidentId"
+        ).innerText =
+            "INCIDENT ID: " + data.incident_id;
+
+
+        document.getElementById(
+            "severityResult"
+        ).innerText =
+            "⚠ " + data.severity;
+
+
+        document.getElementById(
+            "typeResult"
+        ).innerText =
+            data.incident_type;
+
+
+        document.getElementById(
+            "priorityResult"
+        ).innerText =
+            data.priority;
+
+
+        document.getElementById(
+            "locationResult"
+        ).innerText =
+            data.location;
+
+        
+        document.getElementById(
+            "statusResult"
+        ).innerText =
+            data.status;
+
+        startStatusPolling(
+            data.incident_id
+        );
+
+
+    }
+
+    catch (error) {
+
+        errorBox.innerText =
+            "Unable to connect to AcciSense backend. " +
+            "Make sure FastAPI is running.";
+
+        errorBox.style.display = "block";
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+        loading.style.display = "none";
+
+    }
+
+}
+
+async function acknowledgeIncident() {
+
+    const incidentId =
+        document
+            .getElementById("incidentId")
+            .innerText
+            .replace("INCIDENT ID: ", "")
+            .trim();
+
+
+    const button =
+        document.getElementById(
+            "acknowledgeButton"
+        );
+
+
+    button.disabled = true;
+
+    button.innerText =
+        "ACKNOWLEDGING...";
+
+
+    try {
+
+        const response = await fetch(
+
+            `http://127.0.0.1:8000/incident/${incidentId}/acknowledge`,
+
+            {
+                method: "POST"
+            }
+
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Unable to acknowledge incident."
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        /*
+         * Update status
+         */
+
+        const statusElements =
+            document.querySelectorAll(
+                ".data-value"
+            );
+
+
+        /*
+         * Find the STATUS element
+         */
+
+        statusElements[
+            statusElements.length - 1
+        ].innerText =
+            data.status;
+
+
+        /*
+         * Change button
+         */
+
+        button.innerText =
+            "✓ INCIDENT ACKNOWLEDGED";
+
+
+        button.style.background =
+            "#166534";
+
+
+        button.disabled = true;
+
+
+    }
+
+    catch (error) {
+
+        button.disabled = false;
+
+        button.innerText =
+            "ACKNOWLEDGE INCIDENT";
+
+        alert(
+            "Could not acknowledge incident."
+        );
+
+    }
+
+}
+
+let statusPollingInterval = null;
+
+
+function startStatusPolling(incidentId) {
+
+    // Stop previous polling
+    if (statusPollingInterval) {
+
+        clearInterval(
+            statusPollingInterval
+        );
+    }
+
+
+    // Check immediately
+    checkIncidentStatus(incidentId);
+
+
+    // Then check every second
+    statusPollingInterval = setInterval(
+        () => {
+
+            checkIncidentStatus(
+                incidentId
+            );
+
+        },
+        1000
+    );
+}
+
+
+async function checkIncidentStatus(
+    incidentId
+) {
+
+    try {
+
+        const response = await fetch(
+
+            `http://127.0.0.1:8000/incident/${incidentId}`
+
+        );
+
+
+        if (!response.ok) {
+
+            return;
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const statusElement =
+            document.getElementById(
+                "statusResult"
+            );
+
+
+        statusElement.innerText =
+            data.status;
+
+
+        /*
+         * WAITING FOR ACK
+         */
+
+        if (
+            data.status ===
+            "WAITING_FOR_ACK"
+        ) {
+
+            statusElement.style.color =
+                "#f59e0b";
+
+        }
+
+
+        /*
+         * ACKNOWLEDGED
+         */
+
+        else if (
+            data.status ===
+            "ACKNOWLEDGED"
+        ) {
+
+            statusElement.innerText =
+                "✓ ACKNOWLEDGED";
+
+            statusElement.style.color =
+                "#22c55e";
+
+
+            const button =
+                document.getElementById(
+                    "acknowledgeButton"
+                );
+
+
+            button.innerText =
+                "✓ INCIDENT ACKNOWLEDGED";
+
+
+            button.disabled = true;
+
+
+            button.style.background =
+                "#166534";
+
+
+            // Stop polling
+            clearInterval(
+                statusPollingInterval
+            );
+
+        }
+
+
+        /*
+         * ESCALATED
+         */
+
+        else if (
+            data.status ===
+            "ESCALATED"
+        ) {
+
+            statusElement.innerText =
+                "⚠ ESCALATED";
+
+            statusElement.style.color =
+                "#ff3b30";
+
+
+            const button =
+                document.getElementById(
+                    "acknowledgeButton"
+                );
+
+
+            button.innerText =
+                "⚠ INCIDENT ESCALATED";
+
+
+            button.disabled = true;
+
+
+            button.style.background =
+                "#7f1d1d";
+
+
+            // Stop polling
+            clearInterval(
+                statusPollingInterval
+            );
+
+
+            showEscalationMessage();
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Status polling error:",
+            error
+        );
+
+    }
+
+}
+
+function showEscalationMessage() {
+
+    const existing =
+        document.getElementById(
+            "escalationMessage"
+        );
+
+
+    // Don't create duplicates
+    if (existing) {
+
+        return;
+
+    }
+
+
+    const message =
+        document.createElement(
+            "div"
+        );
+
+
+    message.id =
+        "escalationMessage";
+
+
+    message.innerHTML = `
+        <div style="
+            margin-top: 18px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 59, 48, 0.10);
+            border: 1px solid rgba(255, 59, 48, 0.35);
+            color: #ff8179;
+            font-size: 13px;
+        ">
+            <strong>⚠ AUTOMATIC ESCALATION</strong>
+            <br><br>
+            No acknowledgement was received
+            within the response window.
+            <br>
+            Incident escalated for further response.
+        </div>
+    `;
+
+
+    document
+        .getElementById(
+            "acknowledgementSection"
+        )
+        .appendChild(message);
+}
+
+</script>
+
+</body>
+</html>
