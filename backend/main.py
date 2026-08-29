@@ -1,40 +1,38 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-
-from models import (
-    IncidentRequest,
-    IncidentResponse,
-    AcknowledgementResponse
-)
-
-from analysis import analyze_incident
-
-from datetime import datetime, timezone
+import os
 import uuid
-import asyncio
+
+from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+from typing import Optional, List
+from datetime import datetime
+from dotenv import load_dotenv
+from supabase import create_client, Client
 
 
-# ==================================================
-# CONFIGURATION
-# ==================================================
+load_dotenv()
 
-ESCALATION_TIMEOUT = 300
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError(
+        "Critical Error: Missing Supabase Environment Credentials inside .env"
+    )
 
-# ==================================================
-# APP
-# ==================================================
 
 app = FastAPI(
-    title="AcciSense API",
-    description="Prototype backend for the AcciSense accident-response system",
-    version="0.3.0"
+    title=" AcciSense API",
+    description="Distributed Traffic Accident Emergency Response & Escalation Gateway System",
+    version="1.0.0"
 )
 
 
-# ==================================================
-# CORS
-# ==================================================
+supabase: Client = create_client(
+    SUPABASE_URL,
+    SUPABASE_KEY
+)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,200 +43,115 @@ app.add_middleware(
 )
 
 
-# ==================================================
-# TEMPORARY INCIDENT STORAGE
-# ==================================================
-
-incidents = {}
-
-
-# ==================================================
-# HELPER
-# ==================================================
-
-def current_time():
-    return datetime.now(timezone.utc).isoformat()
+class IncidentCardResponse(BaseModel):
+    card_id: str = Field(..., example="AC-B84061CB")
+    location: str
+    severity: str
+    status: str
+    created_at: datetime
+    ipfs_audit_hash: Optional[str] = None
 
 
-# ==================================================
-# ESCALATION TIMER
-# ==================================================
-
-async def escalation_timer(incident_id: str):
-
-    # Wait for the configured timeout
-    await asyncio.sleep(ESCALATION_TIMEOUT)
-
-    # Check whether incident still exists
-    if incident_id not in incidents:
-        return
-
-    incident = incidents[incident_id]
-
-    # If already acknowledged, do nothing
-    if incident["status"] != "WAITING_FOR_ACK":
-        return
-
-    # No acknowledgement received
-    incident["status"] = "ESCALATED"
-
-    incident["escalated_at"] = current_time()
-
-    print(
-        f"[ESCALATION] "
-        f"{incident_id} escalated because "
-        f"no acknowledgement was received."
-    )
+class IncidentCreateRequest(BaseModel):
+    incident_type: str
+    location: str
+    severity_indicator: str
 
 
-# ==================================================
-# HEALTH CHECK
-# ==================================================
+# ==========================================
+# CREATE INCIDENT
+# ==========================================
 
-@app.get("/health")
-def health_check():
+@app.post("/incident")
+async def create_incident(incident: IncidentCreateRequest):
+
+    incident_id = f"AC-{uuid.uuid4().hex[:8].upper()}"
 
     return {
-        "status": "online",
-        "service": "AcciSense Backend"
-    }
-
-
-# ==================================================
-# CREATE INCIDENT
-# ==================================================
-
-@app.post(
-    "/incident",
-    response_model=IncidentResponse
-)
-async def create_incident(
-    incident: IncidentRequest
-):
-
-    # Generate unique incident ID
-    incident_id = (
-        "AC-" +
-        str(uuid.uuid4())[:8].upper()
-    )
-
-    # Analyze incident
-    analysis = analyze_incident(
-        incident.severity_indicator
-    )
-
-    # Store incident
-    incident_data = {
-
         "incident_id": incident_id,
-
         "incident_type": incident.incident_type,
-
         "location": incident.location,
-
-        "severity": analysis["severity"],
-
-        "priority": analysis["priority"],
-
-        "status": "WAITING_FOR_ACK",
-
-        "created_at": current_time(),
-
-        "acknowledged_at": None,
-
-        "escalated_at": None
+        "severity_indicator": incident.severity_indicator,
+        "status": "OPEN",
+        "created_at": datetime.utcnow().isoformat()
     }
 
-    incidents[incident_id] = incident_data
 
-    # Start escalation timer
-    asyncio.create_task(
-        escalation_timer(incident_id)
-    )
+@app.post("/incident/{incident_id}/acknowledge")
+async def acknowledge_incident(incident_id: str):
+    """
+    Acknowledge an AcciSense incident.
 
-    print(
-        f"[NEW INCIDENT] {incident_id} "
-        f"| {analysis['severity']} "
-        f"| {analysis['priority']}"
-    )
+    Updates the corresponding record in the cards table
+    using the AcciSense incident ID.
+    """
 
-    return incident_data
+    try:
+        acknowledged_at = datetime.utcnow().isoformat()
 
-
-# ==================================================
-# GET INCIDENT
-# ==================================================
-
-@app.get(
-    "/incident/{incident_id}",
-    response_model=IncidentResponse
-)
-def get_incident(incident_id: str):
-
-    if incident_id not in incidents:
-
-        raise HTTPException(
-            status_code=404,
-            detail="Incident not found"
+        response = (
+            supabase
+            .table("cards")
+            .update({
+                "status": "Acknowledged",
+                "acknowledged_at": acknowledged_at
+            })
+            .eq("acci_id", incident_id)
+            .execute()
         )
 
-    return incidents[incident_id]
-
-
-# ==================================================
-# ACKNOWLEDGE INCIDENT
-# ==================================================
-
-@app.post(
-    "/incident/{incident_id}/acknowledge",
-    response_model=AcknowledgementResponse
-)
-def acknowledge_incident(
-    incident_id: str
-):
-
-    if incident_id not in incidents:
-
-        raise HTTPException(
-            status_code=404,
-            detail="Incident not found"
-        )
-
-    incident = incidents[incident_id]
-
-    # Already acknowledged
-    if incident["status"] == "ACKNOWLEDGED":
+        # No matching incident found
+        if not response.data:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Incident {incident_id} not found"
+            )
 
         return {
             "incident_id": incident_id,
-            "status": "ACKNOWLEDGED",
-            "acknowledged_at": incident["acknowledged_at"]
+            "status": "Acknowledged",
+            "acknowledged_at": acknowledged_at
         }
 
-    # Already escalated
-    if incident["status"] == "ESCALATED":
+    except HTTPException:
+        raise
 
+    except Exception as e:
         raise HTTPException(
-            status_code=409,
-            detail=(
-                "Incident has already been escalated "
-                "because no acknowledgement was received."
-            )
+            status_code=500,
+            detail=f"Failed to acknowledge incident: {str(e)}"
         )
 
-    # Record acknowledgement
-    acknowledged_at = current_time()
+# ==========================================
+# GET CARDS
+# ==========================================
 
-    incident["status"] = "ACKNOWLEDGED"
+@app.get(
+    "/cards",
+    response_model=List[IncidentCardResponse],
+    status_code=status.HTTP_200_OK
+)
+async def get_cards():
 
-    incident["acknowledged_at"] = acknowledged_at
+    try:
+        response = supabase.table("cards").select("*").execute()
+        return response.data
 
-    print(
-        f"[ACKNOWLEDGED] {incident_id}"
-    )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database Retrieval Anomaly: {str(e)}"
+        )
+
+
+# ==========================================
+# ROOT
+# ==========================================
+
+@app.get("/", status_code=status.HTTP_200_OK, include_in_schema=False)
+async def root_diagnostic():
 
     return {
-        "incident_id": incident_id,
-        "status": "ACKNOWLEDGED",
-        "acknowledged_at": acknowledged_at
+        "system_status": "ONLINE",
+        "service": "AcciSense Core Gateway Engine"
     }

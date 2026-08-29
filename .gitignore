@@ -1,0 +1,14 @@
+# Python Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Python caching bytecode (keeps your folder clean)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Secrets (Never commit these!)
+.env
