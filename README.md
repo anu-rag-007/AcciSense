@@ -189,3 +189,18 @@ Accisense/
 | REST API             | Backend communication   |
 | Webhooks             | Event communication     |
 | GitHub               | Source control          |
+
+
+### Clone the repository
+\`\`\`bash
+git clone https://github.com/anu-rag-007
+cd accisense
+\`\`\`
+
+### Spin Up the Backend API
+\`\`\`bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+\`\`\`
+Visit \`http://127.0.0\` to access the interactive Swagger UI interface.
