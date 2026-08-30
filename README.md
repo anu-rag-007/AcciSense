@@ -29,7 +29,7 @@ AcciSense addresses this by connecting **incident detection → notification →
 - **💻 Live Backend API (Swagger UI):** `http://127.0.0.1:8000/docs` *(If applicable)*
 - **🎥 2-Minute Project Demonstration Video:** [Watch our Walkthrough on YouTube]
 [![Watch the video](https://img.youtube.com/vi/wqEoUBcJ2y78Z1MY/maxresdefault.jpg)](https://youtu.be/Rc4Uodzkcj4?si=wqEoUBcJ2y78Z1MY)
-- **📈 Pitch Presentation Deck:** [View Our Presentation Slides](YOUR_GOOGLE_SLIDES_OR_CANVA_LINK_HERE)
+- **📈 Pitch Presentation Deck:** [View Our Presentation Slides](https://canva.link/i7aaqm02uuppyq1)
 
 ---
 
