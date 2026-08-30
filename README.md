@@ -204,3 +204,14 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 \`\`\`
 Visit \`http://127.0.0\` to access the interactive Swagger UI interface.
+
+---
+
+## 📊 Quick Links & Assets
+- **💻 Live Backend API (Swagger UI):** `http://127.0.0.1:8000/docs` *(If applicable)*
+- **🎥 2-Minute Project Demonstration Video:** [Watch our Walkthrough on YouTube]
+https://youtu.be/Rc4Uodzkcj4?si=wqEoUBcJ2y78Z1MY
+- **📈 Pitch Presentation Deck:** [View Our Presentation Slides](YOUR_GOOGLE_SLIDES_OR_CANVA_LINK_HERE)
+
+---
+
