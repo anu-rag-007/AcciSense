@@ -17,3 +17,6 @@ __pycache__/
 n8n/database.sqlite
 n8n/database.sqlite-shm
 n8n/database.sqlite-wal
+n8n/*.log
+n8n/crash.journal
+n8n/config
