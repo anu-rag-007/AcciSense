@@ -12,3 +12,8 @@ __pycache__/
 
 # Environment Secrets (Never commit these!)
 .env
+
+# n8n local database/runtime files
+n8n/database.sqlite
+n8n/database.sqlite-shm
+n8n/database.sqlite-wal
