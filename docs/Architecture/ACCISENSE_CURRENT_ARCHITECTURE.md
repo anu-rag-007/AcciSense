@@ -1,59 +1,30 @@
-                         ┌──────────────────┐
-                         │ ACCISENSE SYSTEM │
-                         │ Incident Source          │
-                         └────────┬─────────┘
-                                           │
-                                          ▼
-                         ┌──────────────────┐
-                         │  Backend / API            │
-                         │                                     │
-                         │ • Create Incident        │ 
-                         │ • Manage Status        │
-                         │ • Escalation                │
-                         └────────┬─────────┘
-                                           │
-                                          ▼
-                          ┌──────────────────┐
-                          │       n8n                       │
-                          │  Automation Hub       │
-                         └────────┬─────────┘
-                                  │
-                    ┌─────────────┴─────────────┐
-                    ▼                           ▼
-          ┌─────────────────┐          ┌─────────────────┐
-          │    Telegram                │          │    Supabase              │
-          │                                   │          │                                   │
-          │ 🚨 ALERT                 │          │ Incident Record        │
-          │                                   │          │                                   │
-          │ [  ✅ ACK  ]              │          │ • acci_id                    │
-          └────────┬────────┘          │ • message_id           │
-                            │                            │ • status                     │
-                           ▼                           │ • acknowledged       │
-           ACK CALLBACK                   └─────────────────┘
-                    │
-                   ▼
-          ┌─────────────────┐
-          │    ACK n8n                │
-          │    Workflow               │
-          └────────┬────────┘
-                   │
-                   ▼
-          ┌─────────────────┐
-          │ Backend ACK API     │
-          └────────┬────────┘
-                            │
-                           ▼
-        ┌────────────────────────┐
-        │ Update Telegram Alert          │
-        │                                                 │
-        │ Status: ACKNOWLEDGED     │
-        │ ACK button removed             │
-        └───────────┬────────────┘
-                                │
-                               ▼
-          ┌───────────────────┐
-          │ Update Supabase        │
-          │                                       │
-          │ ACKNOWLEDGED        │
-          │ acknowledged_at        │
-          └───────────────────┘
+                    Accident Image
+                          ↓
+                 /incident/from-image
+                          ↓
+                     Vision AI
+                          ↓
+                    Create Incident
+                          ↓
+                       Supabase
+                          ↓
+               ┌───────────────────┐
+               │   n8n Webhook     │
+               │ accisense-alert    │
+               └─────────┬─────────┘
+                         ↓
+                 Severity Router
+                  ↙    ↓    ↓    ↘
+                P0    P1    P2    P3
+                 ↓     ↓     ↓     ↓
+               Telegram / Email
+                         ↓
+                       Wait
+                         ↓
+                    Check Status
+                      ↙     ↘
+                    ACK      NO ACK
+                    ↓          ↓
+                   END      Escalate
+                               ↓
+                         Telegram + Twilio
