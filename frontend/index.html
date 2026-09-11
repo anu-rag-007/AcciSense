@@ -285,6 +285,16 @@
                 <div class="panel-title">🚨 Report New Incident</div>
                 <form id="incidentForm">
                     <div class="form-group">
+                        <label for="accidentImage">ACCIDENT IMAGE</label>
+                        <input
+                            type="file"
+                            id="accidentImage"
+                            name="accidentImage"
+                            accept="image/*"
+                            required
+                        >
+                    </div>
+                    <div class="form-group">
                         <label>Incident Type</label>
                         <select id="incType" required>
                             <option value="Vehicle Accident">Vehicle Accident</option>
@@ -461,41 +471,70 @@
         // ==========================================
         // 4. FORM SUBMISSION & MAP MARKERS
         // ==========================================
-        document.getElementById('incidentForm').addEventListener('submit', function(e) {
+        document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (!selectedCoords) {
-                alert("Please click on the map to select a location first.");
+
+            const imageInput = document.getElementById('accidentImage');
+
+            if (!imageInput.files || imageInput.files.length === 0) {
+                showToast('Please select an accident image.', 'error');
                 return;
             }
 
-            const type = document.getElementById('incType').value;
-            const severity = document.getElementById('incSeverity').value;
-            const location = document.getElementById('incLocation').value;
-            const time = new Date().toLocaleTimeString();
+            const imageFile = imageInput.files[0];
 
-            const newInc = {
-                id: incidentIdCounter++,
-                type, severity, location, time,
-                status: 'new',
-                lat: selectedCoords.lat,
-                lng: selectedCoords.lng
-            };
+            const formData = new FormData();
+            formData.append('file', imageFile);
 
-            incidents.unshift(newInc);
-            addIncidentToFeed(newInc);
-            updateStats();
-            placeMarker(newInc);
-            showToast(`🚨 NEW ${severity.toUpperCase()} ALERT`, `${type} at ${location}`);
+            try {
+                showToast('Analyzing accident image...', 'info');
 
-            // Play 5-second beep for Critical or High
-            if (severity === 'Critical' || severity === 'High') {
-                playEmergencyBeep();
+                const response = await fetch('http://localhost:8000/incident/from-image',
+                    {
+                        method: 'POST',
+                        body: formData
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {throw new Error(data.detail || 'Failed to create incident.');
+                }
+
+                console.log('AcciSense incident created:', data);
+
+                const incident = {
+                    id: data.incident_id,
+                    type: data.analysis.incident_type,
+                    severity: data.analysis.severity,
+                    score: data.analysis.severity_score,
+                    priority: data.analysis.priority,
+                    peopleAffected: data.analysis.people_affected,
+                    description: data.analysis.description,
+                    confidence: data.analysis.ai_confidence,
+                    location: data.location,
+                    status: data.status,
+                    createdAt: data.created_at
+                };
+
+        
+                addIncidentToFeed(incident);
+
+        
+                updateStats();
+
+        
+                imageInput.value = '';
+
+                showToast(`Incident ${data.incident_id} created successfully.`,'success'
+                );
+
+            } catch (error) {
+                console.error('AcciSense error:', error);
+
+                showToast(error.message || 'Unable to connect to AcciSense backend.','error'
+                );
             }
-
-            // Reset form
-            this.reset();
-            selectedCoords = null;
         });
 
         function placeMarker(inc) {
