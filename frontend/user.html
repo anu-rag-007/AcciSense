@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AcciSense | Report Incident</title>
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #0b0f14;
+            color: #e8edf3;
+            min-height: 100vh;
+        }
+
+        header {
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            border-bottom: 1px solid #202832;
+            background: #10151c;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e53935;
+            font-size: 21px;
+        }
+
+        .brand h1 {
+            font-size: 20px;
+        }
+
+        .brand span {
+            display: block;
+            color: #8b98a8;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #72e0a0;
+            font-size: 13px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #37d67a;
+            box-shadow: 0 0 10px #37d67a;
+        }
+
+        main {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        .page-title {
+            margin-bottom: 24px;
+        }
+
+        .page-title h2 {
+            font-size: 28px;
+            margin-bottom: 7px;
+        }
+
+        .page-title p {
+            color: #8995a4;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 430px 1fr;
+            gap: 22px;
+        }
+
+        .card {
+            background: #11171f;
+            border: 1px solid #202a35;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #202a35;
+        }
+
+        .card-header h3 {
+            font-size: 16px;
+        }
+
+        .card-header p {
+            color: #7f8b9a;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .form {
+            padding: 20px;
+        }
+
+        .field {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: #aab5c2;
+            margin-bottom: 8px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            height: 44px;
+            padding: 0 12px;
+            border-radius: 8px;
+            border: 1px solid #293542;
+            background: #0b1016;
+            color: #e8edf3;
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #e53935;
+        }
+
+        .upload {
+            border: 1px dashed #394654;
+            border-radius: 10px;
+            padding: 22px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .upload:hover {
+            border-color: #e53935;
+            background: #141b23;
+        }
+
+        .upload-icon {
+            font-size: 30px;
+            margin-bottom: 8px;
+        }
+
+        .upload strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .upload small {
+            color: #758293;
+            display: block;
+            margin-top: 5px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #preview {
+            display: none;
+            width: 100%;
+            max-height: 190px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .location-status {
+            padding: 10px 12px;
+            background: #0b1016;
+            border: 1px solid #293542;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #8f9bab;
+            margin-top: 10px;
+        }
+
+        button {
+            width: 100%;
+            height: 48px;
+            border: 0;
+            border-radius: 9px;
+            background: #e53935;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #c62828;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .map-card {
+            min-height: 620px;
+        }
+
+        #map {
+            height: 100%;
+            min-height: 620px;
+        }
+
+        .result {
+            display: none;
+            margin-top: 18px;
+            border-radius: 10px;
+            border: 1px solid #26323e;
+            padding: 15px;
+            background: #0d131a;
+        }
+
+        .result.success {
+            border-color: #246b46;
+        }
+
+        .result.error {
+            border-color: #7f2929;
+        }
+
+        .result-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 5px 0;
+            font-size: 12px;
+        }
+
+        .result-row span:first-child {
+            color: #7f8b9a;
+        }
+
+        .result-row span:last-child {
+            text-align: right;
+        }
+
+        .instructions {
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 9px;
+            background: #151c24;
+            border: 1px solid #232d38;
+            color: #8995a4;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .instructions strong {
+            color: #dce3ea;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .map-card,
+            #map {
+                min-height: 400px;
+            }
+
+            main {
+                padding: 18px;
+            }
+
+            header {
+                padding: 0 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="brand">
+        <div class="brand-icon">🚨</div>
+
+        <div>
+            <h1>AcciSense</h1>
+            <span>Emergency Incident Reporting</span>
+        </div>
+    </div>
+
+    <div class="status">
+        <div class="status-dot"></div>
+        System Online
+    </div>
+</header>
+
+
+<main>
+
+    <div class="page-title">
+        <h2>Report an Emergency</h2>
+        <p>
+            Submit accident evidence and location information for immediate
+            emergency response.
+        </p>
+    </div>
+
+
+    <div class="grid">
+
+        <!-- LEFT: REPORT FORM -->
+        <div>
+
+            <div class="card">
+
+                <div class="card-header">
+                    <h3>Incident Information</h3>
+                    <p>Provide the available accident details.</p>
+                </div>
+
+                <div class="form">
+
+                    <!-- IMAGE -->
+                    <div class="field">
+
+                        <label>Accident Image *</label>
+
+                        <label class="upload" for="fileInput">
+
+                            <div class="upload-icon">📷</div>
+
+                            <strong id="uploadText">
+                                Upload accident image
+                            </strong>
+
+                            <small>
+                                JPG, PNG or WEBP
+                            </small>
+
+                        </label>
+
+                        <input
+                            type="file"
+                            id="fileInput"
+                            accept="image/*"
+                        >
+
+                        <img id="preview">
+
+                    </div>
+
+
+                    <!-- LOCATION NAME -->
+                    <div class="field">
+
+                        <label for="locationInput">
+                            Location
+                        </label>
+
+                        <input
+                            id="locationInput"
+                            type="text"
+                            placeholder="e.g. Pari Chowk, Greater Noida"
+                        >
+
+                    </div>
+
+
+                    <!-- INCIDENT TYPE -->
+                    <div class="field">
+
+                        <label for="incidentType">
+                            Incident Type
+                        </label>
+
+                        <select id="incidentType">
+
+                            <option value="ACCIDENT_DETECTED">
+                                Accident Detected
+                            </option>
+
+                            <option value="VEHICLE_COLLISION">
+                                Vehicle Collision
+                            </option>
+
+                            <option value="ROAD_ACCIDENT">
+                                Road Accident
+                            </option>
+
+                            <option value="FIRE">
+                                Vehicle Fire
+                            </option>
+
+                            <option value="ROLLOVER">
+                                Vehicle Rollover
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- MAP INFO -->
+                    <div class="field">
+
+                        <label>
+                            Incident Coordinates
+                        </label>
+
+                        <div class="location-status" id="locationStatus">
+                            Click anywhere on the map to select the
+                            incident location.
+                        </div>
+
+                    </div>
+
+
+                    <!-- SUBMIT -->
+                    <button id="submitBtn">
+                        🚨 Analyze & Dispatch Incident
+                    </button>
+
+
+                    <!-- RESULT -->
+                    <div id="result" class="result">
+
+                        <div
+                            id="resultTitle"
+                            class="result-title"
+                        ></div>
+
+                        <div id="resultContent"></div>
+
+                    </div>
+
+
+                    <div class="instructions">
+
+                        <strong>How it works</strong><br>
+
+                        1. Upload an accident image.<br>
+                        2. Select the incident location on the map.<br>
+                        3. AcciSense AI analyzes the image.<br>
+                        4. The incident is stored and dispatched automatically.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- RIGHT: MAP -->
+        <div class="card map-card">
+
+            <div class="card-header">
+
+                <h3>Incident Location</h3>
+
+                <p>
+                    Click the map to set the accident coordinates.
+                </p>
+
+            </div>
+
+            <div id="map"></div>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+    const API_URL = "http://localhost:8000";
+
+    let selectedLatitude = null;
+    let selectedLongitude = null;
+    let selectedMarker = null;
+
+
+    // --------------------------------------------------
+    // MAP
+    // --------------------------------------------------
+
+    const map = L.map("map").setView(
+        [28.4595, 77.0266],
+        11
+    );
+
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            maxZoom: 19,
+            attribution: "&copy; OpenStreetMap contributors"
+        }
+    ).addTo(map);
+
+
+    // --------------------------------------------------
+    // MAP CLICK
+    // --------------------------------------------------
+
+    map.on("click", function(event) {
+
+        selectedLatitude = event.latlng.lat;
+        selectedLongitude = event.latlng.lng;
+
+
+        if (selectedMarker) {
+            map.removeLayer(selectedMarker);
+        }
+
+
+        selectedMarker = L.marker([
+            selectedLatitude,
+            selectedLongitude
+        ]).addTo(map);
+
+
+        selectedMarker.bindPopup(
+            "Selected Incident Location"
+        ).openPopup();
+
+
+        document.getElementById(
+            "locationStatus"
+        ).innerHTML =
+            "📍 Latitude: " +
+            selectedLatitude.toFixed(6) +
+            " | Longitude: " +
+            selectedLongitude.toFixed(6);
+
+    });
+
+
+    // --------------------------------------------------
+    // IMAGE PREVIEW
+    // --------------------------------------------------
+
+    const fileInput =
+        document.getElementById("fileInput");
+
+    const preview =
+        document.getElementById("preview");
+
+    const uploadText =
+        document.getElementById("uploadText");
+
+
+    fileInput.addEventListener("change", function() {
+
+        const file = this.files[0];
+
+        if (!file) {
+            return;
+        }
+
+
+        uploadText.textContent = file.name;
+
+
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+
+            preview.src = event.target.result;
+
+            preview.style.display = "block";
+
+        };
+
+        reader.readAsDataURL(file);
+
+    });
+
+
+    // --------------------------------------------------
+    // SUBMIT INCIDENT
+    // --------------------------------------------------
+
+    document
+        .getElementById("submitBtn")
+        .addEventListener("click", async function() {
+
+            const button = this;
+
+            const file = fileInput.files[0];
+
+            const location =
+                document
+                    .getElementById("locationInput")
+                    .value
+                    .trim();
+
+
+            // Validate image
+            if (!file) {
+
+                showResult(
+                    false,
+                    "Please upload an accident image."
+                );
+
+                return;
+
+            }
+
+
+            // Validate location
+            if (!location) {
+
+                showResult(
+                    false,
+                    "Please enter the incident location."
+                );
+
+                return;
+
+            }
+
+
+            // Validate coordinates
+            if (
+                selectedLatitude === null ||
+                selectedLongitude === null
+            ) {
+
+                showResult(
+                    false,
+                    "Please select the incident location on the map."
+                );
+
+                return;
+
+            }
+
+
+            button.disabled = true;
+
+            button.textContent =
+                "⏳ AI Analyzing Incident...";
+
+
+            try {
+
+                const formData = new FormData();
+
+                formData.append(
+                    "file",
+                    file
+                );
+
+                formData.append(
+                    "location",
+                    location
+                );
+
+                formData.append(
+                    "latitude",
+                    selectedLatitude
+                );
+
+                formData.append(
+                    "longitude",
+                    selectedLongitude
+                );
+
+
+                const response = await fetch(
+                    API_URL + "/incident/from-image",
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.detail ||
+                        "Failed to create incident."
+                    );
+
+                }
+
+
+                showIncidentResult(data);
+
+
+                // Add final marker
+                if (selectedMarker) {
+
+                    selectedMarker
+                        .bindPopup(
+                            `
+                            <strong>🚨 AcciSense Incident</strong><br>
+                            ID: ${data.incident_id}<br>
+                            Severity: ${data.analysis.severity}<br>
+                            Priority: ${data.analysis.priority}<br>
+                            Status: ${data.status}
+                            `
+                        )
+                        .openPopup();
+
+                }
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                showResult(
+                    false,
+                    error.message
+                );
+
+            } finally {
+
+                button.disabled = false;
+
+                button.textContent =
+                    "🚨 Analyze & Dispatch Incident";
+
+            }
+
+        });
+
+
+    // --------------------------------------------------
+    // SUCCESS RESULT
+    // --------------------------------------------------
+
+    function showIncidentResult(data) {
+
+        const result =
+            document.getElementById("result");
+
+        const title =
+            document.getElementById("resultTitle");
+
+        const content =
+            document.getElementById("resultContent");
+
+
+        result.style.display = "block";
+
+        result.className =
+            "result success";
+
+
+        title.textContent =
+            "✅ Incident Dispatched Successfully";
+
+
+        content.innerHTML = `
+
+            <div class="result-row">
+                <span>Incident ID</span>
+                <span>${data.incident_id}</span>
+            </div>
+
+            <div class="result-row">
+                <span>Incident</span>
+                <span>${data.analysis.incident_type}</span>
+            </div>
+
+            <div class="result-row">
+                <span>Severity</span>
+                <span>${data.analysis.severity}</span>
+            </div>
+
+            <div class="result-row">
+                <span>Priority</span>
+                <span>${data.analysis.priority}</span>
+            </div>
+
+            <div class="result-row">
+                <span>People Affected</span>
+                <span>${data.analysis.people_affected ?? "Unknown"}</span>
+            </div>
+
+            <div class="result-row">
+                <span>AI Confidence</span>
+                <span>${data.analysis.ai_confidence ?? "N/A"}</span>
+            </div>
+
+            <div class="result-row">
+                <span>Location</span>
+                <span>${data.location}</span>
+            </div>
+
+            <div class="result-row">
+                <span>n8n Dispatch</span>
+                <span>
+                    ${data.n8n_triggered ? "✅ Triggered" : "⚠️ Not Triggered"}
+                </span>
+            </div>
+
+        `;
+
+    }
+
+
+    // --------------------------------------------------
+    // ERROR
+    // --------------------------------------------------
+
+    function showResult(success, message) {
+
+        const result =
+            document.getElementById("result");
+
+        const title =
+            document.getElementById("resultTitle");
+
+        const content =
+            document.getElementById("resultContent");
+
+
+        result.style.display = "block";
+
+        result.className =
+            success
+                ? "result success"
+                : "result error";
+
+
+        title.textContent =
+            success
+                ? "Success"
+                : "⚠️ Request Failed";
+
+
+        content.innerHTML =
+            `<div style="font-size:12px;">${message}</div>`;
+
+    }
+
+</script>
+
+</body>
+</html>

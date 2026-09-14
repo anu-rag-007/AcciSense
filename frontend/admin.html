@@ -1,0 +1,13 @@
+const API = "https://accisense-api.onrender.com"; // deployed URL
+async function loadCards(){
+  const r = await fetch(`${API}/cards`);            // EXISTING endpoint
+  renderTable(await r.json());
+}
+async function ack(id){ await fetch(`${API}/incident/${id}/acknowledge`, {method:"POST"}); loadCards(); } // EXISTING
+async function dispatchBlinkit(id){                 // sandbox adapter, no backend change
+  const eta = 4 + Math.floor(Math.random()*5);
+  const vehicle = `BLK-AMB-${String(Math.floor(Math.random()*40)+1).padStart(2,"0")}`;
+  await sb.from("dispatches").insert({acci_id:id, vehicle_id:vehicle, eta_minutes:eta,
+        tracking_url:`https://blinkit.live/track/${id}`});   // supabase-js, anon key
+  showEtaCard(id, vehicle, eta);
+}

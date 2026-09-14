@@ -1,607 +1,4267 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AcciSense | Intelligent Dispatch Dashboard</title>
-    
-    <!-- Leaflet CSS for Map (No API Key Required) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
-    <style>
-        :root {
-            --bg-primary: #0b0f19;
-            --bg-secondary: #111827;
-            --bg-card: #1f2937;
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --accent-blue: #3b82f6;
-            --accent-red: #ef4444;
-            --accent-orange: #f97316;
-            --accent-yellow: #eab308;
-            --accent-green: #22c55e;
-            --border-color: #374151;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AcciSense | Autonomous Dispatch Dashboard</title>
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+<style>
+:root{
+  --bg:#0c1424;
+  --panel:#111d33;
+  --panel2:#16253f;
+  --line:#22344f;
+  --ink:#e9f1ff;
+  --mut:#8ba3c7;
+  --cyan:#38d9d0;
+  --red:#ff4d5e;
+  --orange:#ff9838;
+  --yellow:#ffd257;
+  --green:#3ddc97;
+  --mono:'Consolas','Courier New',monospace;
+}
 
-        /* Header */
-        header {
-            background: var(--bg-secondary);
-            padding: 12px 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-        }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box
+}
 
-        .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: 1px; color: var(--accent-blue); }
-        .logo span { color: var(--text-primary); }
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Segoe UI',Arial,sans-serif;
+  overflow:hidden
+}
 
-        .header-controls { display: flex; gap: 20px; align-items: center; }
-        .live-clock { font-family: monospace; font-size: 1.1rem; color: var(--accent-green); }
-        
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-        .btn-primary { background: var(--accent-blue); color: white; }
-        .btn-primary:hover { background: #2563eb; }
-        .btn-danger { background: var(--accent-red); color: white; }
-        .btn-success { background: var(--accent-green); color: white; }
-        .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
-        
-        .audio-toggle {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .audio-toggle.active { border-color: var(--accent-green); color: var(--accent-green); }
+/* ================= HEADER ================= */
 
-        /* Stats Bar */
-        .stats-bar {
-            display: flex;
-            gap: 16px;
-            padding: 16px 24px;
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-        }
-        .stat-card {
-            flex: 1;
-            background: var(--bg-card);
-            padding: 12px 20px;
-            border-radius: 8px;
-            border-left: 4px solid var(--accent-blue);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .stat-card.critical { border-left-color: var(--accent-red); }
-        .stat-card.ack { border-left-color: var(--accent-yellow); }
-        .stat-value { font-size: 1.8rem; font-weight: bold; }
-        .stat-label { font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; }
+header{
+  height:54px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:0 16px;
+  border-bottom:1px solid var(--line);
+  background:#0e1830
+}
 
-        /* Main Layout */
-        main {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-        }
+.brand{
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:1px
+}
 
-        /* Left Panel */
-        .left-panel {
-            width: 400px;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            background: var(--bg-secondary);
-        }
+.brand small{
+  font-weight:400;
+  color:var(--mut);
+  font-size:12px;
+  margin-left:6px
+}
 
-        .panel-section {
-            padding: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .panel-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-secondary);
-        }
+.auto-badge{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:1px;
+  padding:4px 10px;
+  border-radius:4px;
+  background:rgba(61,220,151,.12);
+  color:var(--green);
+  border:1px solid rgba(61,220,151,.4)
+}
 
-        /* Form */
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--text-secondary); }
-        select, input {
-            width: 100%;
-            padding: 8px 12px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-        }
-        select:focus, input:focus { outline: none; border-color: var(--accent-blue); }
-        
-        .location-hint { font-size: 0.75rem; color: var(--accent-blue); margin-top: 4px; cursor: pointer; }
+#clock{
+  font-family:var(--mono);
+  font-size:16px;
+  margin-left:auto;
+  color:var(--cyan)
+}
 
-        /* Live Feed */
-        .feed-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-        }
-        .feed-container::-webkit-scrollbar { width: 6px; }
-        .feed-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+.hbtn{
+  background:var(--panel2);
+  border:1px solid var(--line);
+  color:var(--ink);
+  padding:7px 13px;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:13px;
+  transition:.2s
+}
 
-        .incident-card {
-            background: var(--bg-card);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-left: 4px solid var(--accent-blue);
-            animation: slideIn 0.3s ease-out;
-            position: relative;
-        }
-        .incident-card.critical { border-left-color: var(--accent-red); background: rgba(239, 68, 68, 0.1); }
-        .incident-card.high { border-left-color: var(--accent-orange); }
-        .incident-card.medium { border-left-color: var(--accent-yellow); }
-        .incident-card.low { border-left-color: var(--accent-green); }
+.hbtn:hover{
+  border-color:var(--cyan)
+}
 
-        .incident-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
-        .incident-type { font-weight: bold; font-size: 0.95rem; }
-        .incident-time { font-size: 0.75rem; color: var(--text-secondary); }
-        .incident-loc { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; }
-        
-        .incident-actions { display: flex; gap: 8px; margin-top: 10px; }
-        .badge {
-            font-size: 0.7rem;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .badge-new { background: var(--accent-blue); }
-        .badge-ack { background: var(--accent-yellow); color: black; }
-        .badge-resolved { background: var(--accent-green); }
+.hbtn.sim{
+  background:#5b1e26;
+  border-color:#8a2f3a
+}
 
-        /* Right Panel (Map) */
-        .right-panel {
-            flex: 1;
-            position: relative;
-        }
-        #map { height: 100%; width: 100%; z-index: 1; }
-        
-        .map-overlay {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: rgba(17, 24, 39, 0.9);
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            backdrop-filter: blur(5px);
-            font-size: 0.85rem;
-            display: flex;
-            gap: 15px;
-        }
-        .map-overlay span { color: var(--accent-green); font-weight: bold; }
+/* ================= STATS ================= */
 
-        /* Toast Notification */
-        .toast-container {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .toast {
-            background: var(--bg-card);
-            border-left: 4px solid var(--accent-red);
-            padding: 15px 20px;
-            border-radius: 6px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-            animation: slideInRight 0.4s ease-out;
-            min-width: 300px;
-        }
-        .toast-title { font-weight: bold; color: var(--accent-red); margin-bottom: 4px; }
-        .toast-msg { font-size: 0.85rem; color: var(--text-secondary); }
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  padding:12px 16px
+}
 
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
-        
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        .pulse { animation: pulse 2s infinite; }
-    </style>
+.stat{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-left:4px solid var(--cyan);
+  border-radius:6px;
+  padding:9px 14px
+}
+
+.stat b{
+  display:block;
+  font-family:var(--mono);
+  font-size:26px;
+  line-height:1.1
+}
+
+.stat span{
+  font-size:11.5px;
+  color:var(--mut)
+}
+
+.stat.crit{
+  border-left-color:var(--red)
+}
+
+.stat.crit b{
+  color:var(--red)
+}
+
+.stat.units{
+  border-left-color:var(--yellow)
+}
+
+.stat.units b{
+  color:var(--yellow)
+}
+
+.stat.resp{
+  border-left-color:var(--green)
+}
+
+.stat.resp b{
+  color:var(--green)
+}
+
+/* ================= LAYOUT ================= */
+
+.layout{
+  display:grid;
+  grid-template-columns:310px 1fr 330px;
+  gap:12px;
+  padding:0 16px 12px;
+  height:calc(100vh - 54px - 92px - 32px)
+}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:6px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  min-height:0
+}
+
+.p-head{
+  padding:10px 12px;
+  border-bottom:1px solid var(--line);
+  font-weight:600;
+  font-size:14px
+}
+
+/* ================= FORM ================= */
+
+.fields{
+  padding:12px;
+  display:grid;
+  gap:10px
+}
+
+label{
+  font-size:11px;
+  color:var(--mut);
+  letter-spacing:.5px;
+  display:block;
+  margin-bottom:4px
+}
+
+select,
+input[type=text],
+input[type=file]{
+  width:100%;
+  background:#0b1526;
+  border:1px solid var(--line);
+  color:var(--ink);
+  padding:8px;
+  border-radius:4px;
+  font-size:13px;
+  outline:none
+}
+
+select:focus,
+input:focus{
+  border-color:var(--cyan)
+}
+
+input[type=file]{
+  font-size:11px
+}
+
+.gps{
+  font-family:var(--mono);
+  font-size:12px
+}
+
+.dispatch-btn{
+  background:linear-gradient(135deg,#ff4d5e,#ff8a3d);
+  border:none;
+  color:#fff;
+  font-weight:700;
+  letter-spacing:1px;
+  padding:11px;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:14px
+}
+
+.dispatch-btn:hover{
+  filter:brightness(1.15)
+}
+
+.dispatch-btn:disabled{
+  opacity:.5;
+  cursor:not-allowed
+}
+
+/* ================= CONSOLE ================= */
+
+.console-head{
+  padding:8px 12px;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  font-size:12px;
+  font-weight:600;
+  color:var(--green);
+  background:rgba(61,220,151,.05)
+}
+
+#console{
+  flex:1;
+  overflow-y:auto;
+  padding:8px 10px;
+  font-family:var(--mono);
+  font-size:10.5px;
+  line-height:1.75
+}
+
+#console::-webkit-scrollbar,
+#feedList::-webkit-scrollbar,
+.detail::-webkit-scrollbar{
+  width:6px
+}
+
+#console::-webkit-scrollbar-thumb,
+#feedList::-webkit-scrollbar-thumb,
+.detail::-webkit-scrollbar-thumb{
+  background:var(--line)
+}
+
+.lg{
+  animation:lgIn .3s both
+}
+
+@keyframes lgIn{
+  from{
+    opacity:0;
+    transform:translateY(-4px)
+  }
+}
+
+.lg .ts{
+  color:#41598055
+}
+
+/* ================= FILTERS ================= */
+
+.chips{
+  padding:8px 10px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  gap:6px
+}
+
+.chip-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  align-items:center
+}
+
+.chip-row em{
+  font-style:normal;
+  font-size:9px;
+  letter-spacing:1px;
+  color:#5c7396;
+  width:52px
+}
+
+.chip{
+  font-size:11px;
+  padding:3px 9px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:transparent;
+  color:var(--mut);
+  cursor:pointer;
+  transition:.15s;
+  user-select:none
+}
+
+.chip:hover{
+  color:var(--ink);
+  border-color:#3c5a85
+}
+
+.chip.on{
+  color:#06121f;
+  font-weight:600
+}
+
+.chip.on.t{
+  background:var(--cyan);
+  border-color:var(--cyan)
+}
+
+.chip.on.s-critical{
+  background:var(--red);
+  border-color:var(--red);
+  color:#fff
+}
+
+.chip.on.s-high{
+  background:var(--orange);
+  border-color:var(--orange)
+}
+
+.chip.on.s-medium{
+  background:var(--yellow);
+  border-color:var(--yellow)
+}
+
+.chip.on.s-low{
+  background:var(--green);
+  border-color:var(--green)
+}
+
+/* ================= FEED ================= */
+
+#feedList{
+  list-style:none;
+  overflow-y:auto;
+  flex:1;
+  padding:8px
+}
+
+.fi{
+  display:grid;
+  grid-template-columns:4px 1fr auto;
+  border-radius:5px;
+  margin-bottom:6px;
+  cursor:pointer;
+  border:1px solid transparent;
+  transition:.15s;
+  overflow:hidden
+}
+
+.fi:hover{
+  background:var(--panel2);
+  border-color:var(--line)
+}
+
+.fi.sel{
+  background:var(--panel2);
+  border-color:var(--cyan)
+}
+
+.fi .bd{
+  padding:7px 9px
+}
+
+.fi .t1{
+  font-size:12.5px;
+  font-weight:600
+}
+
+.fi .t2{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--mut);
+  margin-top:2px
+}
+
+.fi .ago{
+  font-family:var(--mono);
+  font-size:10px;
+  color:#5c7396;
+  padding:8px 8px 0 0;
+  text-align:right
+}
+
+.st-badge{
+  display:inline-block;
+  font-family:var(--mono);
+  font-size:9px;
+  padding:1px 6px;
+  border-radius:3px;
+  margin-top:4px;
+  border:1px solid
+}
+
+.empty{
+  padding:24px;
+  text-align:center;
+  color:#5c7396;
+  font-size:12px
+}
+
+/* ================= MAP ================= */
+
+.map-area{
+  position:relative;
+  border:1px solid var(--line);
+  border-radius:6px;
+  overflow:hidden
+}
+
+#map{
+  position:absolute;
+  inset:0;
+  background:#0a1220
+}
+
+.searchbar{
+  position:absolute;
+  top:10px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(460px,72%);
+  z-index:1100
+}
+
+.searchbar input{
+  width:100%;
+  padding:10px 12px 10px 34px;
+  border-radius:6px;
+  background:rgba(255,255,255,.96);
+  border:1px solid #ccc;
+  color:#111;
+  font-size:13px;
+  box-shadow:0 6px 18px rgba(0,0,0,.35)
+}
+
+.searchbar::before{
+  content:'🔍';
+  position:absolute;
+  left:10px;
+  top:9px;
+  font-size:13px
+}
+
+.sresults{
+  position:absolute;
+  top:calc(100% + 5px);
+  left:0;
+  right:0;
+  background:rgba(255,255,255,.98);
+  border:1px solid #ddd;
+  border-radius:6px;
+  display:none;
+  overflow:hidden;
+  color:#111
+}
+
+.sresults.open{
+  display:block
+}
+
+.sr{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:8px 12px;
+  cursor:pointer;
+  border-bottom:1px solid #eee
+}
+
+.sr:hover{
+  background:#f0f6ff
+}
+
+.sr b{
+  font-size:12.5px;
+  display:block
+}
+
+.sr span{
+  font-family:var(--mono);
+  font-size:9.5px;
+  color:#666
+}
+
+.layers{
+  position:absolute;
+  top:10px;
+  left:10px;
+  z-index:1100;
+  display:flex;
+  gap:4px
+}
+
+.layers button{
+  background:rgba(255,255,255,.95);
+  border:1px solid #ccc;
+  color:#333;
+  font-size:11px;
+  font-weight:600;
+  padding:6px 10px;
+  border-radius:4px;
+  cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.25)
+}
+
+.layers button.on{
+  background:#1a73e8;
+  color:#fff;
+  border-color:#1a73e8
+}
+
+.maplegend{
+  position:absolute;
+  left:10px;
+  bottom:10px;
+  z-index:1000;
+  background:rgba(255,255,255,.94);
+  border-radius:5px;
+  padding:8px 11px;
+  font-size:10px;
+  color:#333;
+  box-shadow:0 2px 8px rgba(0,0,0,.3)
+}
+
+.maplegend .lr{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:3px 0
+}
+
+.dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  display:inline-block
+}
+
+.mk{
+  position:relative;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  border:2px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.5)
+}
+
+.mk::after{
+  content:'';
+  position:absolute;
+  inset:-6px;
+  border-radius:50%;
+  border:2px solid currentColor;
+  opacity:0;
+  animation:ping 1.6s infinite
+}
+
+@keyframes ping{
+  0%{
+    transform:scale(.4);
+    opacity:.9
+  }
+  80%,100%{
+    transform:scale(1.25);
+    opacity:0
+  }
+}
+
+.mk.sev-critical{
+  background:var(--red);
+  color:var(--red)
+}
+
+.mk.sev-high{
+  background:var(--orange);
+  color:var(--orange)
+}
+
+.mk.sev-medium{
+  background:var(--yellow);
+  color:var(--yellow)
+}
+
+.mk.sev-low{
+  background:var(--green);
+  color:var(--green)
+}
+
+.mk.resolved{
+  background:#9aa7bd;
+  color:#9aa7bd;
+  opacity:.5
+}
+
+.mk.resolved::after{
+  display:none
+}
+
+.search-pin{
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:#1a73e8;
+  border:2px solid #fff;
+  box-shadow:0 0 0 6px rgba(26,115,232,.3)
+}
+
+.leaflet-tooltip.acc-tip{
+  background:#0d1830;
+  border:1px solid var(--line);
+  color:var(--ink);
+  border-radius:6px;
+  padding:8px 11px;
+  box-shadow:0 8px 22px rgba(0,0,0,.55)
+}
+
+.leaflet-tooltip.acc-tip::before{
+  display:none
+}
+
+.acc-tip .tt{
+  font-size:12px;
+  font-weight:600
+}
+
+.acc-tip .tm{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--mut);
+  margin-top:3px;
+  line-height:1.6
+}
+
+/* ================= FOOTER ================= */
+
+footer{
+  height:32px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding:0 16px;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--mut);
+  border-top:1px solid var(--line);
+  background:#0e1830
+}
+
+.net-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--green);
+  display:inline-block;
+  margin-right:5px
+}
+
+footer .rt{
+  margin-left:auto
+}
+
+/* ================= DETAIL ================= */
+
+.detail{
+  position:fixed;
+  top:54px;
+  right:0;
+  bottom:0;
+  width:380px;
+  background:var(--panel);
+  border-left:1px solid var(--line);
+  transform:translateX(105%);
+  transition:transform .35s ease;
+  z-index:1200;
+  overflow-y:auto;
+  box-shadow:-14px 0 40px rgba(0,0,0,.5)
+}
+
+.detail.open{
+  transform:translateX(0)
+}
+
+.d-head{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:13px 16px;
+  border-bottom:1px solid var(--line);
+  position:sticky;
+  top:0;
+  background:var(--panel);
+  z-index:2
+}
+
+.pill{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:700;
+  padding:3px 9px;
+  border-radius:3px;
+  color:#06121f
+}
+
+.d-id{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--mut)
+}
+
+#dClose{
+  margin-left:auto;
+  background:none;
+  border:1px solid var(--line);
+  color:var(--mut);
+  width:26px;
+  height:26px;
+  border-radius:4px;
+  cursor:pointer
+}
+
+.d-body{
+  padding:16px
+}
+
+.d-type{
+  font-size:19px;
+  font-weight:700
+}
+
+.d-loc{
+  color:var(--cyan);
+  font-size:13px;
+  margin-top:6px
+}
+
+.d-meta{
+  font-family:var(--mono);
+  font-size:10.5px;
+  color:var(--mut);
+  margin-top:9px;
+  line-height:1.9;
+  border:1px dashed var(--line);
+  border-radius:5px;
+  padding:8px 11px
+}
+
+.ai-box{
+  margin-top:11px;
+  background:rgba(61,220,151,.06);
+  border:1px solid rgba(61,220,151,.3);
+  border-radius:5px;
+  padding:9px 11px;
+  font-family:var(--mono);
+  font-size:10.5px;
+  line-height:1.9;
+  color:#bfe9d8
+}
+
+.ai-box b{
+  color:var(--green)
+}
+
+.d-note{
+  font-size:12.5px;
+  color:#b9c9e8;
+  margin-top:10px;
+  font-style:italic
+}
+
+.sec-label{
+  font-size:11px;
+  letter-spacing:2px;
+  font-weight:700;
+  color:var(--mut);
+  margin:18px 0 10px
+}
+
+.sec-label::after{
+  content:'';
+  display:block;
+  height:1px;
+  background:var(--line);
+  margin-top:5px
+}
+
+.tl-item{
+  display:grid;
+  grid-template-columns:18px 1fr auto;
+  gap:11px;
+  position:relative;
+  padding-bottom:18px
+}
+
+.tl-item:not(:last-child)::before{
+  content:'';
+  position:absolute;
+  left:8px;
+  top:18px;
+  bottom:0;
+  width:2px;
+  background:var(--line)
+}
+
+.tl-item.done:not(:last-child)::before{
+  background:var(--green)
+}
+
+.tl-dot{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  border:2px solid var(--line);
+  display:grid;
+  place-items:center;
+  font-size:9px;
+  background:var(--panel);
+  z-index:1
+}
+
+.tl-item.done .tl-dot{
+  border-color:var(--green);
+  color:var(--green)
+}
+
+.tl-item.current .tl-dot{
+  border-color:var(--yellow);
+  color:var(--yellow)
+}
+
+.tl-label{
+  font-size:12.5px;
+  font-weight:600
+}
+
+.tl-item.pending .tl-label{
+  color:#5c7396;
+  font-weight:400
+}
+
+.tl-item.current .tl-label{
+  color:var(--yellow)
+}
+
+.tl-time{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--mut);
+  margin-top:1px
+}
+
+.tl-delta{
+  font-family:var(--mono);
+  font-size:9.5px;
+  color:#5c7396;
+  padding-top:3px
+}
+
+.act{
+  width:100%;
+  margin-top:4px;
+  background:linear-gradient(135deg,var(--cyan),#2ab8ff);
+  border:none;
+  color:#06121f;
+  font-weight:700;
+  letter-spacing:1px;
+  padding:10px;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:13px
+}
+
+.closed-note{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--green);
+  text-align:center
+}
+
+.error-note{
+  color:var(--red);
+  font-family:var(--mono);
+  font-size:10px;
+  padding:10px
+}
+
+@media(max-width:1100px){
+  .layout{
+    grid-template-columns:1fr;
+    height:auto;
+    overflow:auto
+  }
+
+  body{
+    overflow:auto
+  }
+
+  .map-area{
+    height:460px
+  }
+
+  .stats{
+    grid-template-columns:repeat(2,1fr)
+  }
+}
+</style>
 </head>
+
 <body>
 
-    <!-- Header -->
-    <header>
-        <div class="logo">ACCISENSE <span>| Dispatch</span></div>
-        <div class="header-controls">
-            <div class="live-clock" id="liveClock">--:--:--</div>
-            <button class="btn audio-toggle active" id="audioToggle">🔊 Audio ON</button>
-            <button class="btn btn-primary" onclick="simulateIncoming()">🚨 Simulate Incoming</button>
-        </div>
-    </header>
+<header>
 
-    <!-- Stats Bar -->
-    <div class="stats-bar">
-        <div class="stat-card">
-            <div>
-                <div class="stat-label">Active Incidents</div>
-                <div class="stat-value" id="statActive">0</div>
-            </div>
-            <div style="font-size: 2rem; opacity: 0.2;">🚨</div>
-        </div>
-        <div class="stat-card critical">
-            <div>
-                <div class="stat-label">Critical Priority</div>
-                <div class="stat-value" id="statCritical">0</div>
-            </div>
-            <div style="font-size: 2rem; opacity: 0.2;">⚠️</div>
-        </div>
-        <div class="stat-card ack">
-            <div>
-                <div class="stat-label">Acknowledged</div>
-                <div class="stat-value" id="statAck">0</div>
-            </div>
-            <div style="font-size: 2rem; opacity: 0.2;">🚓</div>
-        </div>
+  <div class="brand">
+    ACCISENSE
+    <small>| Autonomous Dispatch · NOIDA</small>
+  </div>
+
+  <span class="auto-badge" id="autoBadge">
+    ● BACKEND CONNECTED
+  </span>
+
+  <span id="clock">--:--:--</span>
+
+  <button class="hbtn" id="refreshBtn">
+    ↻ REFRESH
+  </button>
+
+  <button class="hbtn" id="audioBtn">
+    🔊 Audio ON
+  </button>
+
+  <button class="hbtn sim" id="simBtn">
+    ⚡ Force Detection
+  </button>
+
+</header>
+
+<div class="stats">
+
+  <div class="stat">
+    <b id="activeCount">0</b>
+    <span>Active Incidents</span>
+  </div>
+
+  <div class="stat crit">
+    <b id="criticalCount">0</b>
+    <span>🚨 Critical Priority</span>
+  </div>
+
+  <div class="stat units">
+    <b id="unitsCount">0</b>
+    <span>🚑 Units Deployed</span>
+  </div>
+
+  <div class="stat resp">
+    <b id="responseTime">—</b>
+    <span>⏱ Avg Response</span>
+  </div>
+
+</div>
+
+<div class="layout">
+
+  <!-- ================= REPORT PANEL ================= -->
+
+  <div class="panel">
+
+    <div class="p-head">
+      🚓 Manual Override — Report Incident
     </div>
 
-    <!-- Main Content -->
-    <main>
-        <!-- Left Panel: Form & Feed -->
-        <div class="left-panel">
-            <div class="panel-section">
-                <div class="panel-title">🚨 Report New Incident</div>
-                <form id="incidentForm">
-                    <div class="form-group">
-                        <label for="accidentImage">ACCIDENT IMAGE</label>
-                        <input
-                            type="file"
-                            id="accidentImage"
-                            name="accidentImage"
-                            accept="image/*"
-                            required
-                        >
-                    </div>
-                    <div class="form-group">
-                        <label>Incident Type</label>
-                        <select id="incType" required>
-                            <option value="Vehicle Accident">Vehicle Accident</option>
-                            <option value="Multi-Vehicle Collision">Multi-Vehicle Collision</option>
-                            <option value="Pedestrian Incident">Pedestrian Incident</option>
-                            <option value="Road Hazard">Road Hazard</option>
-                            <option value="Medical Emergency">Medical Emergency</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Severity</label>
-                        <select id="incSeverity" required>
-                            <option value="Critical">Critical</option>
-                            <option value="High">High</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Low">Low</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Location (GPS)</label>
-                        <input type="text" id="incLocation" placeholder="Click on map to auto-fill..." readonly required>
-                        <div class="location-hint" onclick="document.getElementById('map').focus()">📍 Click map to set coordinates</div>
-                    </div>
-                    <button type="submit" class="btn btn-danger" style="width: 100%; margin-top: 10px;">DISPATCH ALERT</button>
-                </form>
+    <form class="fields" id="reportForm">
+
+      <div>
+        <label>Incident Type</label>
+
+        <select id="fType">
+
+          <option value="VEHICLE_COLLISION">
+            🚗 Vehicle Accident
+          </option>
+
+          <option value="MULTI_VEHICLE_COLLISION">
+            🚙 Multi-Vehicle Collision
+          </option>
+
+          <option value="PEDESTRIAN_INCIDENT">
+            🚶 Pedestrian Incident
+          </option>
+
+          <option value="ROAD_HAZARD">
+            ⚠️ Road Hazard
+          </option>
+
+          <option value="MEDICAL_EMERGENCY">
+            🚑 Medical Emergency
+          </option>
+
+        </select>
+      </div>
+
+      <div>
+        <label>Severity Indicator</label>
+
+        <select id="fSev">
+
+          <option value="CRITICAL">
+            Critical
+          </option>
+
+          <option value="HIGH" selected>
+            High
+          </option>
+
+          <option value="MEDIUM">
+            Medium
+          </option>
+
+          <option value="LOW">
+            Low
+          </option>
+
+        </select>
+      </div>
+
+      <div>
+        <label>
+          Location (GPS) — 📍 Click map to set
+        </label>
+
+        <input
+          type="text"
+          class="gps"
+          id="fLoc"
+          readonly
+          placeholder="awaiting map click…">
+      </div>
+
+      <div>
+        <label>
+          Accident Image
+        </label>
+
+        <input
+          type="file"
+          id="incidentImage"
+          accept="image/*">
+      </div>
+
+      <button
+        type="submit"
+        class="dispatch-btn"
+        id="dispatchBtn">
+
+        🚨 DISPATCH ALERT
+
+      </button>
+
+    </form>
+
+    <div class="console-head">
+      🤖 ACCISENSE BACKEND — LIVE EVENT STREAM
+    </div>
+
+    <div id="console"></div>
+
+  </div>
+
+  <!-- ================= MAP ================= -->
+
+  <div class="map-area">
+
+    <div class="layers">
+
+      <button id="lyStreet" class="on">
+        MAP
+      </button>
+
+      <button id="lySat">
+        SATELLITE
+      </button>
+
+      <button id="lyDark">
+        DARK
+      </button>
+
+    </div>
+
+    <div class="searchbar">
+
+      <input
+        type="text"
+        id="searchIn"
+        placeholder="Search place in Noida…"
+        autocomplete="off">
+
+      <div
+        class="sresults"
+        id="sResults">
+      </div>
+
+    </div>
+
+    <div id="map"></div>
+
+    <div class="maplegend">
+
+      <div class="lr">
+        <span
+          class="dot"
+          style="background:#ff4d5e">
+        </span>
+        Critical
+      </div>
+
+      <div class="lr">
+        <span
+          class="dot"
+          style="background:#ff9838">
+        </span>
+        High
+      </div>
+
+      <div class="lr">
+        <span
+          class="dot"
+          style="background:#ffd257">
+        </span>
+        Medium
+      </div>
+
+      <div class="lr">
+        <span
+          class="dot"
+          style="background:#3ddc97">
+        </span>
+        Low
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ================= LIVE FEED ================= -->
+
+  <div class="panel">
+
+    <div class="p-head">
+      📡 Live Incident Feed
+    </div>
+
+    <div
+      class="chips"
+      id="chips">
+    </div>
+
+    <ul id="feedList"></ul>
+
+  </div>
+
+</div>
+
+<footer>
+
+  <span>
+    <span class="net-dot"></span>
+    Network:
+    <b style="color:var(--green)">
+      CONNECTED
+    </b>
+  </span>
+
+  <span>
+    API:
+    <span id="apiStatus">
+      CHECKING
+    </span>
+  </span>
+
+  <span>
+    Database:
+    <span id="dbStatus">
+      LIVE
+    </span>
+  </span>
+
+  <span class="rt">
+    UPTIME
+    <span id="up">
+      00:00:00
+    </span>
+  </span>
+
+</footer>
+
+<aside
+  class="detail"
+  id="detail">
+</aside>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+/* =========================================================
+   ACCISENSE BACKEND CONFIGURATION
+========================================================= */
+
+const API_URL = "http://localhost:8000";
+
+
+/* =========================================================
+   CONSTANTS
+========================================================= */
+
+const SEV = {
+
+  critical:{
+    label:"CRITICAL",
+    color:"#ff4d5e",
+    rank:0
+  },
+
+  high:{
+    label:"HIGH",
+    color:"#ff9838",
+    rank:1
+  },
+
+  medium:{
+    label:"MEDIUM",
+    color:"#ffd257",
+    rank:2
+  },
+
+  low:{
+    label:"LOW",
+    color:"#3ddc97",
+    rank:3
+  }
+
+};
+
+
+const TYPES = {
+
+  vehicle:{
+    label:"Vehicle Accident",
+    icon:"🚗"
+  },
+
+  multi:{
+    label:"Multi-Vehicle Collision",
+    icon:"🚙"
+  },
+
+  ped:{
+    label:"Pedestrian Incident",
+    icon:"🚶"
+  },
+
+  hazard:{
+    label:"Road Hazard",
+    icon:"⚠️"
+  },
+
+  medical:{
+    label:"Medical Emergency",
+    icon:"🚑"
+  },
+
+  unknown:{
+    label:"Accident Incident",
+    icon:"🚨"
+  }
+
+};
+
+
+const STAGES = [
+  "Reported",
+  "Acknowledged",
+  "Dispatched",
+  "On Scene",
+  "Resolved"
+];
+
+
+const NOIDA = [
+
+  ["Sector 18 Market",28.5705,77.3262],
+  ["Sector 62 IT Hub",28.6285,77.3648],
+  ["Sector 15",28.5886,77.3377],
+  ["Sector 39",28.5669,77.3633],
+  ["Noida Electronic City",28.5030,77.3780],
+  ["Greater Noida",28.4744,77.5040],
+  ["DND Flyway",28.5800,77.2900],
+  ["Botanical Garden Metro",28.5677,77.3386],
+  ["City Centre Sector 32",28.5633,77.3530],
+  ["Noida Stadium",28.5466,77.3260],
+  ["Amity University",28.5440,77.3331],
+  ["Fortis Hospital Sector 62",28.6259,77.3636],
+  ["Sector 137 Expressway",28.5150,77.3900],
+  ["Noida Toll Plaza",28.5830,77.2970]
+
+];
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let incidents = [];
+
+let selectedId = null;
+
+let audioOn = true;
+
+let pickMarker = null;
+
+let searchMarker = null;
+
+let markers = {};
+
+let firstLoad = true;
+
+const filt = {
+
+  time:"all",
+
+  sev:new Set([
+    "critical",
+    "high",
+    "medium",
+    "low"
+  ]),
+
+  type:new Set([
+    "vehicle",
+    "multi",
+    "ped",
+    "hazard",
+    "medical",
+    "unknown"
+  ])
+
+};
+
+const bootT = Date.now();
+
+const now = () => Date.now();
+
+const $ = s => document.querySelector(s);
+
+const esc = s =>
+  String(s ?? "")
+    .replace(/[&<>"]/g,c=>({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;"
+    }[c]));
+
+
+/* =========================================================
+   SOUND
+========================================================= */
+
+function ACtx(){
+
+  return beep.ctx ||
+    (beep.ctx =
+      new (
+        window.AudioContext ||
+        window.webkitAudioContext
+      )());
+
+}
+
+
+function alertSound(){
+
+  if(!audioOn) return;
+
+  try{
+
+    const C = ACtx();
+
+    const t = C.currentTime;
+
+    const o = C.createOscillator();
+
+    const g = C.createGain();
+
+    o.type = "sawtooth";
+
+    o.connect(g);
+
+    g.connect(C.destination);
+
+    o.frequency.setValueAtTime(600,t);
+
+    o.frequency.linearRampToValueAtTime(
+      1200,
+      t+.75
+    );
+
+    o.frequency.linearRampToValueAtTime(
+      600,
+      t+1.5
+    );
+
+    g.gain.setValueAtTime(.0001,t);
+
+    g.gain.linearRampToValueAtTime(
+      .12,
+      t+.05
+    );
+
+    g.gain.linearRampToValueAtTime(
+      .0001,
+      t+2.8
+    );
+
+    o.start(t);
+
+    o.stop(t+3);
+
+  }catch(e){}
+
+}
+
+
+function beep(
+  f1=880,
+  f2=560
+){
+
+  if(!audioOn) return;
+
+  try{
+
+    const C = ACtx();
+
+    const o =
+      C.createOscillator();
+
+    const g =
+      C.createGain();
+
+    o.connect(g);
+
+    g.connect(C.destination);
+
+    o.type = "square";
+
+    g.gain.setValueAtTime(
+      .05,
+      C.currentTime
+    );
+
+    o.frequency.setValueAtTime(
+      f1,
+      C.currentTime
+    );
+
+    o.frequency.setValueAtTime(
+      f2,
+      C.currentTime+.13
+    );
+
+    g.gain.exponentialRampToValueAtTime(
+      .001,
+      C.currentTime+.3
+    );
+
+    o.start();
+
+    o.stop(
+      C.currentTime+.32
+    );
+
+  }catch(e){}
+
+}
+
+
+/* =========================================================
+   MAP
+========================================================= */
+
+const map =
+  L.map("map",{
+    zoomControl:false
+  })
+  .setView(
+    [28.5580,77.3700],
+    12
+  );
+
+
+L.control.zoom({
+  position:"bottomright"
+}).addTo(map);
+
+
+const layers = {
+
+  street:
+
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      {
+        attribution:
+          "&copy; OpenStreetMap &copy; CARTO",
+        maxZoom:20
+      }
+    ),
+
+  sat:
+
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution:
+          "Tiles &copy; Esri",
+        maxZoom:19
+      }
+    ),
+
+  dark:
+
+    L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {
+        attribution:
+          "&copy; OpenStreetMap &copy; CARTO",
+        maxZoom:19
+      }
+    )
+
+};
+
+
+layers.street.addTo(map);
+
+
+function setLayer(k){
+
+  Object.values(layers)
+    .forEach(l =>
+      map.removeLayer(l)
+    );
+
+  layers[k].addTo(map);
+
+  [
+    "lyStreet",
+    "lySat",
+    "lyDark"
+  ].forEach(id =>
+    $("#"+id)
+      .classList.remove("on")
+  );
+
+  $({
+    street:"#lyStreet",
+    sat:"#lySat",
+    dark:"#lyDark"
+  }[k])
+  .classList.add("on");
+
+}
+
+
+$("#lyStreet").onclick =
+  () => setLayer("street");
+
+$("#lySat").onclick =
+  () => setLayer("sat");
+
+$("#lyDark").onclick =
+  () => setLayer("dark");
+
+
+map.setMaxBounds([
+  [28.42,77.24],
+  [28.70,77.56]
+]);
+
+map.setMinZoom(11);
+
+
+const markersLayer =
+  L.layerGroup()
+   .addTo(map);
+
+
+/* =========================================================
+   LOCATION HELPERS
+========================================================= */
+
+function nearestPlace(
+  lat,
+  lng
+){
+
+  let best = null;
+
+  let bd = Infinity;
+
+  for(
+    const p of NOIDA
+  ){
+
+    const d =
+      Math.hypot(
+        p[1]-lat,
+        p[2]-lng
+      );
+
+    if(d < bd){
+
+      bd = d;
+
+      best = p;
+
+    }
+
+  }
+
+  return bd < .05
+    ? best[0]
+    : null;
+
+}
+
+
+function placeName(
+  lat,
+  lng
+){
+
+  const p =
+    nearestPlace(
+      lat,
+      lng
+    );
+
+  return p
+    ? `near ${p}, Noida`
+    : "Noida, Uttar Pradesh";
+
+}
+
+
+/* =========================================================
+   BACKEND STATUS
+========================================================= */
+
+async function checkBackend(){
+
+  try{
+
+    const response =
+      await fetch(
+        API_URL + "/",
+        {
+          method:"GET"
+        }
+      );
+
+    if(!response.ok)
+      throw new Error();
+
+    $("#apiStatus").textContent =
+      "ONLINE";
+
+    $("#apiStatus").style.color =
+      "var(--green)";
+
+    $("#dbStatus").textContent =
+      "LIVE";
+
+    $("#autoBadge").textContent =
+      "● BACKEND CONNECTED";
+
+    $("#autoBadge").style.color =
+      "var(--green)";
+
+    return true;
+
+  }catch(error){
+
+    $("#apiStatus").textContent =
+      "OFFLINE";
+
+    $("#apiStatus").style.color =
+      "var(--red)";
+
+    $("#autoBadge").textContent =
+      "● BACKEND OFFLINE";
+
+    $("#autoBadge").style.color =
+      "var(--red)";
+
+    log(
+      "ERROR",
+      "Cannot connect to FastAPI at " +
+      API_URL,
+      "#ff4d5e"
+    );
+
+    return false;
+
+  }
+
+}
+
+
+/* =========================================================
+   NORMALIZE BACKEND INCIDENT
+========================================================= */
+
+function normalizeIncident(row){
+
+  const rawType =
+    String(
+      row.incident_type ||
+      row.event ||
+      ""
+    ).toLowerCase();
+
+  let type = "unknown";
+
+  if(
+    rawType.includes("multi")
+  ){
+    type = "multi";
+  }
+
+  else if(
+    rawType.includes("pedestrian") ||
+    rawType.includes("ped")
+  ){
+    type = "ped";
+  }
+
+  else if(
+    rawType.includes("medical")
+  ){
+    type = "medical";
+  }
+
+  else if(
+    rawType.includes("hazard") ||
+    rawType.includes("fire")
+  ){
+    type = "hazard";
+  }
+
+  else if(
+    rawType.includes("vehicle") ||
+    rawType.includes("collision") ||
+    rawType.includes("accident")
+  ){
+    type = "vehicle";
+  }
+
+
+  let sev =
+    String(
+      row.severity || ""
+    ).toLowerCase();
+
+
+  if(!SEV[sev]){
+
+    const priority =
+      String(
+        row.priority || ""
+      ).toUpperCase();
+
+    if(priority === "P0")
+      sev = "critical";
+
+    else if(priority === "P1")
+      sev = "high";
+
+    else if(priority === "P2")
+      sev = "medium";
+
+    else
+      sev = "low";
+
+  }
+
+
+  let stage = 0;
+
+  const status =
+    String(
+      row.status || ""
+    ).toUpperCase();
+
+
+  if(
+    status === "ACKNOWLEDGED"
+  ){
+    stage = 1;
+  }
+
+  else if(
+    status === "ESCALATED"
+  ){
+    stage = 1;
+  }
+
+  else if(
+    status === "DISPATCHED"
+  ){
+    stage = 2;
+  }
+
+  else if(
+    status === "ON_SCENE"
+  ){
+    stage = 3;
+  }
+
+  else if(
+    status === "RESOLVED" ||
+    status === "RESOLVED_AUDITED"
+  ){
+    stage = 4;
+  }
+
+
+  const lat =
+    Number(row.latitude);
+
+  const lng =
+    Number(row.longitude);
+
+
+  let confidence =
+    Number(
+      row.ai_confidence
+    );
+
+  if(
+    Number.isFinite(confidence) &&
+    confidence <= 1
+  ){
+    confidence *= 100;
+  }
+
+
+  return {
+
+    raw:row,
+
+    id:
+      row.acci_id ||
+      row.id ||
+      "UNKNOWN",
+
+    type,
+
+    sev,
+
+    lat:
+      Number.isFinite(lat)
+        ? lat
+        : null,
+
+    lng:
+      Number.isFinite(lng)
+        ? lng
+        : null,
+
+    location:
+      row.location ||
+      "Location Pending",
+
+    status:
+      row.status ||
+      "WAITING_FOR_ACK",
+
+    priority:
+      row.priority ||
+      "—",
+
+    created:
+      row.created_at
+        ? new Date(row.created_at).getTime()
+        : Date.now(),
+
+    acknowledgedAt:
+      row.acknowledged_at
+        ? new Date(
+            row.acknowledged_at
+          )
+        : null,
+
+    escalatedAt:
+      row.escalated_at
+        ? new Date(
+            row.escalated_at
+          )
+        : null,
+
+    eventTime:
+      row.event_time
+        ? new Date(
+            row.event_time
+          )
+        : null,
+
+    stage,
+
+    conf:
+      Number.isFinite(confidence)
+        ? Math.round(confidence)
+        : null,
+
+    people:
+      row.people_affected,
+
+    score:
+      row.severity_score,
+
+    description:
+      row.description ||
+      "No additional description provided.",
+
+    reporter:
+      row.source ||
+      row.camera_id ||
+      "AcciSense Backend"
+
+  };
+
+}
+
+
+/* =========================================================
+   LOAD INCIDENTS FROM FASTAPI
+========================================================= */
+
+async function loadIncidents(){
+
+  try{
+
+    const response =
+      await fetch(
+        API_URL +
+        "/supervisor/incidents",
+        {
+          method:"GET",
+          cache:"no-store"
+        }
+      );
+
+
+    if(!response.ok){
+
+      throw new Error(
+        `HTTP ${response.status}`
+      );
+
+    }
+
+
+    const rows =
+      await response.json();
+
+
+    const previousIds =
+      new Set(
+        incidents.map(
+          i => i.id
+        )
+      );
+
+
+    incidents =
+      rows.map(
+        normalizeIncident
+      );
+
+
+    renderMarkers();
+
+    refreshAll();
+
+
+    const newCritical =
+      incidents.find(
+        i =>
+          !previousIds.has(i.id) &&
+          i.sev === "critical"
+      );
+
+
+    if(
+      newCritical &&
+      !firstLoad
+    ){
+
+      alertSound();
+
+      log(
+        "ALERT",
+        `${newCritical.id} · new CRITICAL incident received from backend`,
+        "#ff4d5e"
+      );
+
+    }
+
+
+    firstLoad = false;
+
+
+    $("#autoBadge").textContent =
+      `● BACKEND LIVE · ${incidents.length} INCIDENTS`;
+
+    $("#apiStatus").textContent =
+      "ONLINE";
+
+
+  }catch(error){
+
+    console.error(error);
+
+    $("#autoBadge").textContent =
+      "● BACKEND ERROR";
+
+    $("#autoBadge").style.color =
+      "var(--red)";
+
+    $("#apiStatus").textContent =
+      "ERROR";
+
+    $("#apiStatus").style.color =
+      "var(--red)";
+
+    log(
+      "ERROR",
+      `Failed to load incidents: ${error.message}`,
+      "#ff4d5e"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   MARKERS
+========================================================= */
+
+function createMarker(inc){
+
+  if(
+    !Number.isFinite(inc.lat) ||
+    !Number.isFinite(inc.lng)
+  ){
+    return null;
+  }
+
+
+  const icon =
+    L.divIcon({
+
+      className:"",
+
+      html:
+        `<div class="mk sev-${inc.sev} ${
+          inc.stage === 4
+            ? "resolved"
+            : ""
+        }"></div>`,
+
+      iconSize:[
+        14,
+        14
+      ],
+
+      iconAnchor:[
+        7,
+        7
+      ]
+
+    });
+
+
+  const marker =
+    L.marker(
+      [
+        inc.lat,
+        inc.lng
+      ],
+      {
+        icon
+      }
+    )
+    .addTo(
+      markersLayer
+    );
+
+
+  marker.on(
+    "click",
+    () =>
+      openDetail(
+        inc.id
+      )
+  );
+
+
+  marker.bindTooltip(
+    "",
+    {
+      className:"acc-tip",
+      direction:"top",
+      offset:[
+        0,
+        -8
+      ]
+    }
+  );
+
+
+  setTip(
+    inc,
+    marker
+  );
+
+
+  return marker;
+
+}
+
+
+function setTip(
+  inc,
+  marker
+){
+
+  if(!marker)
+    return;
+
+
+  marker.setTooltipContent(
+
+    `<div class="tt">
+      ${TYPES[inc.type].icon}
+      ${esc(TYPES[inc.type].label)}
+    </div>
+
+    <div class="tm">
+
+      ${esc(inc.id)}
+      ·
+      ${SEV[inc.sev].label}
+      ${inc.priority !== "—"
+        ? ` · ${esc(inc.priority)}`
+        : ""}
+
+      <br>
+
+      📍
+      ${esc(
+        inc.location
+      )}
+
+      <br>
+
+      🕐
+      ${elapsed(
+        now()-inc.created
+      )}
+
+      ·
+      ${esc(
+        inc.status
+      )}
+
+    </div>`
+
+  );
+
+}
+
+
+function renderMarkers(){
+
+  markersLayer.clearLayers();
+
+  markers = {};
+
+
+  incidents.forEach(
+    inc => {
+
+      if(
+        !passes(inc)
+      ){
+        return;
+      }
+
+
+      const marker =
+        createMarker(
+          inc
+        );
+
+
+      if(marker){
+        markers[inc.id] =
+          marker;
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   FILTERS
+========================================================= */
+
+function passes(inc){
+
+  if(
+    !filt.sev.has(
+      inc.sev
+    )
+  ){
+    return false;
+  }
+
+
+  if(
+    !filt.type.has(
+      inc.type
+    )
+  ){
+    return false;
+  }
+
+
+  const age =
+    now()-inc.created;
+
+
+  const d =
+    new Date(
+      inc.created
+    );
+
+  const t =
+    new Date();
+
+
+  if(
+    filt.time === "hour"
+  ){
+    return age < 3600e3;
+  }
+
+
+  if(
+    filt.time === "today"
+  ){
+    return (
+      d.toDateString() ===
+      t.toDateString()
+    );
+  }
+
+
+  if(
+    filt.time === "week"
+  ){
+    return age <
+      7*86400e3;
+  }
+
+
+  return true;
+
+}
+
+
+function visible(){
+
+  return incidents
+    .filter(passes)
+    .sort(
+      (a,b) =>
+        a.stage === 4
+          ? 1
+          : b.stage === 4
+            ? -1
+            : SEV[a.sev].rank -
+              SEV[b.sev].rank ||
+              b.created-a.created
+    );
+
+}
+
+
+/* =========================================================
+   FILTER CHIPS
+========================================================= */
+
+function buildChips(){
+
+  const c =
+    $("#chips");
+
+
+  const time = [
+
+    ["all","All"],
+
+    ["hour","Last Hour"],
+
+    ["today","Today"],
+
+    ["week","This Week"]
+
+  ];
+
+
+  c.innerHTML =
+
+    `<div class="chip-row">
+
+      <em>TIME</em>
+
+      ${
+        time.map(
+          ([v,l]) =>
+
+          `<span
+            class="chip t ${
+              filt.time===v
+                ? "on"
+                : ""
+            }"
+            data-g="time"
+            data-v="${v}">
+            ${l}
+          </span>`
+
+        ).join("")
+      }
+
+    </div>` +
+
+
+    `<div class="chip-row">
+
+      <em>SEVERITY</em>
+
+      ${
+        Object.keys(
+          SEV
+        ).map(
+          v =>
+
+          `<span
+            class="chip s-${v} ${
+              filt.sev.has(v)
+                ? "on"
+                : ""
+            }"
+            data-g="sev"
+            data-v="${v}">
+
+            ${SEV[v].label}
+
+          </span>`
+
+        ).join("")
+      }
+
+    </div>` +
+
+
+    `<div class="chip-row">
+
+      <em>TYPE</em>
+
+      ${
+        Object.entries(
+          TYPES
+        ).map(
+          ([v,t]) =>
+
+          `<span
+            class="chip t ${
+              filt.type.has(v)
+                ? "on"
+                : ""
+            }"
+            data-g="type"
+            data-v="${v}">
+
+            ${t.icon}
+            ${t.label.split(" ")[0]}
+
+          </span>`
+
+        ).join("")
+      }
+
+    </div>`;
+
+
+  c.querySelectorAll(
+    ".chip"
+  )
+  .forEach(
+    ch => {
+
+      ch.onclick = () => {
+
+        const g =
+          ch.dataset.g;
+
+        const v =
+          ch.dataset.v;
+
+
+        if(
+          g === "time"
+        ){
+
+          filt.time = v;
+
+        }
+
+        else{
+
+          const set =
+            g === "sev"
+              ? filt.sev
+              : filt.type;
+
+
+          if(
+            set.has(v)
+          ){
+            set.delete(v);
+          }
+
+          else{
+            set.add(v);
+          }
+
+        }
+
+
+        buildChips();
+
+        refreshAll();
+
+      };
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   FEED
+========================================================= */
+
+function stBadge(inc){
+
+  let col =
+    inc.stage === 4
+      ? "#3ddc97"
+      : inc.stage === 0
+        ? "#ff4d5e"
+        : "#ffd257";
+
+
+  if(
+    inc.status ===
+    "ESCALATED"
+  ){
+    col = "#ff4d5e";
+  }
+
+
+  return `
+    <span
+      class="st-badge"
+      style="
+        color:${col};
+        border-color:${col}55;
+        background:${col}14
+      ">
+
+      ${esc(
+        inc.status
+      ).replaceAll(
+        "_",
+        " "
+      )}
+
+    </span>
+  `;
+
+}
+
+
+function renderFeed(){
+
+  const ul =
+    $("#feedList");
+
+
+  const list =
+    visible();
+
+
+  if(
+    !list.length
+  ){
+
+    ul.innerHTML =
+      `<li class="empty">
+        No incidents match filters
+      </li>`;
+
+    return;
+
+  }
+
+
+  ul.innerHTML =
+
+    list.map(
+      inc => {
+
+        const location =
+          inc.location !==
+          "Location Pending"
+
+            ? inc.location
+
+            : (
+                Number.isFinite(
+                  inc.lat
+                )
+                  ? placeName(
+                      inc.lat,
+                      inc.lng
+                    )
+                  : "Location Pending"
+              );
+
+
+        return `
+
+        <li
+          class="fi ${
+            inc.id === selectedId
+              ? "sel"
+              : ""
+          }"
+          data-id="${esc(inc.id)}">
+
+          <div
+            style="
+              background:
+                ${SEV[inc.sev].color}
+            ">
+          </div>
+
+
+          <div class="bd">
+
+            <div class="t1">
+
+              ${
+                TYPES[inc.type].icon
+              }
+
+              ${
+                esc(
+                  TYPES[inc.type].label
+                )
+              }
+
             </div>
 
-            <div class="panel-title" style="padding: 15px 20px 0;">📡 Live Incident Feed</div>
-            <div class="feed-container" id="liveFeed">
-                <!-- Incidents will inject here -->
+
+            <div class="t2">
+
+              ${
+                esc(inc.id)
+              }
+
+              · 📍
+
+              ${
+                esc(location)
+              }
+
             </div>
-        </div>
 
-        <!-- Right Panel: Map -->
-        <div class="right-panel">
-            <div class="map-overlay">
-                <div>Network: <span>STABLE</span></div>
-                <div>Latency: <span id="latency">42ms</span></div>
-                <div>Nodes: <span>14/14</span></div>
-            </div>
-            <div id="map"></div>
-        </div>
-    </main>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
+            ${stBadge(inc)}
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          </div>
 
-    <script>
-        // ==========================================
-        // 1. MAP INITIALIZATION (Leaflet / OpenStreetMap)
-        // ==========================================
-        const map = L.map('map').setView([26.8467, 80.9462], 13); // Default: uttar pradesh
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
 
-        let selectedCoords = null;
-        let markers = [];
+          <div class="ago">
 
-        // Click on map to set location
-        map.on('click', function(e) {
-            selectedCoords = e.latlng;
-            document.getElementById('incLocation').value = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
-            
-            // Add temporary marker
-            L.marker(e.latlng, {opacity: 0.5}).addTo(map);
-        });
-
-        // ==========================================
-        // 2. AUDIO ALERT SYSTEM (Web Audio API - 5 Sec Beep)
-        // ==========================================
-        let audioEnabled = true;
-        const audioToggleBtn = document.getElementById('audioToggle');
-        
-        audioToggleBtn.addEventListener('click', () => {
-            audioEnabled = !audioEnabled;
-            audioToggleBtn.textContent = audioEnabled ? '🔊 Audio ON' : '🔇 Audio OFF';
-            audioToggleBtn.classList.toggle('active', audioEnabled);
-        });
-
-        function playEmergencyBeep() {
-            if (!audioEnabled) return;
-            
-            // Create Audio Context
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            const ctx = new AudioContext();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            
-            osc.type = 'square'; // Harsh emergency sound
-            osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 Note
-            
-            // Generate 5 seconds of alternating beeps
-            const duration = 5;
-            const now = ctx.currentTime;
-            for (let i = 0; i < 10; i++) {
-                gain.gain.setValueAtTime(0.3, now + i * 0.5); // Beep ON
-                gain.gain.setValueAtTime(0, now + i * 0.5 + 0.25); // Beep OFF
+            ${
+              elapsed(
+                now()-inc.created
+              )
             }
-            
-            osc.start(now);
-            osc.stop(now + duration); // Exactly 5 seconds
+
+          </div>
+
+        </li>
+
+        `;
+
+      }
+    ).join("");
+
+
+  ul.querySelectorAll(
+    ".fi"
+  )
+  .forEach(
+    li => {
+
+      li.onclick = () => {
+
+        const inc =
+          incidents.find(
+            i =>
+              i.id ===
+              li.dataset.id
+          );
+
+
+        if(!inc)
+          return;
+
+
+        if(
+          Number.isFinite(
+            inc.lat
+          ) &&
+          Number.isFinite(
+            inc.lng
+          )
+        ){
+
+          map.flyTo(
+            [
+              inc.lat,
+              inc.lng
+            ],
+            Math.max(
+              map.getZoom(),
+              14
+            ),
+            {
+              duration:1.2
+            }
+          );
+
         }
 
-        // ==========================================
-        // 3. STATE & UI LOGIC
-        // ==========================================
-        let incidents = [];
-        let incidentIdCounter = 1;
 
-        function updateStats() {
-            const active = incidents.filter(i => i.status !== 'resolved').length;
-            const critical = incidents.filter(i => i.severity === 'Critical' && i.status !== 'resolved').length;
-            const ack = incidents.filter(i => i.status === 'acknowledged').length;
+        openDetail(
+          inc.id
+        );
 
-            document.getElementById('statActive').textContent = active;
-            document.getElementById('statCritical').textContent = critical;
-            document.getElementById('statAck').textContent = ack;
+      };
+
+    }
+  );
+
+}
+
+
+function elapsed(ms){
+
+  const s =
+    Math.max(
+      0,
+      ms/1000
+    );
+
+
+  if(
+    s < 60
+  )
+    return (
+      Math.floor(s)
+      + "s ago"
+    );
+
+
+  if(
+    s < 3600
+  )
+    return (
+      Math.floor(
+        s/60
+      )
+      + "m ago"
+    );
+
+
+  if(
+    s < 86400
+  )
+    return (
+      Math.floor(
+        s/3600
+      )
+      + "h ago"
+    );
+
+
+  return (
+    Math.floor(
+      s/86400
+    )
+    + "d ago"
+  );
+
+}
+
+
+/* =========================================================
+   STATISTICS
+========================================================= */
+
+function renderStats(){
+
+  const active =
+    incidents.filter(
+      i =>
+        i.stage < 4
+    );
+
+
+  const critical =
+    incidents.filter(
+      i =>
+        i.sev ===
+        "critical" &&
+        i.stage < 4
+    );
+
+
+  const acknowledged =
+    incidents.filter(
+      i =>
+        i.status ===
+        "Acknowledged"
+    );
+
+
+  const escalated =
+    incidents.filter(
+      i =>
+        String(
+          i.status
+        ).toUpperCase() ===
+        "ESCALATED"
+    );
+
+
+  $("#activeCount")
+    .textContent =
+    active.length;
+
+
+  $("#criticalCount")
+    .textContent =
+    critical.length;
+
+
+  /*
+   * We do NOT invent deployed units.
+   * Current backend schema does not contain
+   * a real deployed-unit count.
+   */
+  $("#unitsCount")
+    .textContent =
+    "—";
+
+
+  /*
+   * Real acknowledgement response time
+   * where timestamps exist.
+   */
+  const responseTimes =
+    acknowledged
+      .filter(
+        i =>
+          i.acknowledgedAt
+      )
+      .map(
+        i =>
+          i.acknowledgedAt.getTime() -
+          i.created
+      )
+      .filter(
+        x =>
+          x >= 0
+      );
+
+
+  if(
+    responseTimes.length
+  ){
+
+    const avg =
+      responseTimes.reduce(
+        (a,b) => a+b,
+        0
+      )
+      /
+      responseTimes.length;
+
+
+    $("#responseTime")
+      .textContent =
+      Math.round(
+        avg/1000
+      ) + "s";
+
+  }
+
+  else{
+
+    $("#responseTime")
+      .textContent =
+      "—";
+
+  }
+
+
+  /*
+   * Keep these variables available
+   * for future dashboard expansion.
+   */
+  void escalated;
+
+}
+
+
+/* =========================================================
+   REFRESH
+========================================================= */
+
+function refreshAll(){
+
+  renderFeed();
+
+  renderStats();
+
+}
+
+
+/* =========================================================
+   MAP CLICK
+========================================================= */
+
+map.on(
+  "click",
+  e => {
+
+    const {
+      lat,
+      lng
+    } = e.latlng;
+
+
+    if(
+      pickMarker
+    ){
+
+      map.removeLayer(
+        pickMarker
+      );
+
+    }
+
+
+    pickMarker =
+      L.circleMarker(
+        [
+          lat,
+          lng
+        ],
+        {
+          radius:8,
+          color:"#1a73e8",
+          weight:2,
+          fillColor:"#1a73e8",
+          fillOpacity:.25
+        }
+      )
+      .addTo(map);
+
+
+    $("#fLoc").value =
+
+      `${lat.toFixed(4)}, ${
+        lng.toFixed(4)
+      } · ${
+        placeName(
+          lat,
+          lng
+        )
+      }`;
+
+
+    $("#fLoc")
+      .dataset.lat =
+      lat;
+
+
+    $("#fLoc")
+      .dataset.lng =
+      lng;
+
+
+    beep(
+      1200,
+      1200
+    );
+
+  }
+);
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+const sIn =
+  $("#searchIn");
+
+const sRes =
+  $("#sResults");
+
+
+sIn.addEventListener(
+  "input",
+  () => {
+
+    const q =
+      sIn.value
+        .trim()
+        .toLowerCase();
+
+
+    if(!q){
+
+      sRes.classList
+        .remove("open");
+
+      return;
+
+    }
+
+
+    const local =
+      NOIDA
+        .filter(
+          p =>
+            p[0]
+              .toLowerCase()
+              .includes(q)
+        )
+        .slice(
+          0,
+          8
+        );
+
+
+    if(
+      !local.length
+    ){
+
+      sRes.innerHTML =
+        `<div class="sr">
+          <b style="color:#888">
+            No Noida places found
+          </b>
+        </div>`;
+
+      sRes.classList
+        .add("open");
+
+      return;
+
+    }
+
+
+    sRes.innerHTML =
+
+      local.map(
+        (p,i) =>
+
+        `<div
+          class="sr"
+          data-i="${i}">
+
+          📍
+
+          <div>
+
+            <b>
+              ${esc(p[0])}
+            </b>
+
+            <span>
+              Noida ·
+              ${p[1].toFixed(4)},
+              ${p[2].toFixed(4)}
+            </span>
+
+          </div>
+
+        </div>`
+
+      ).join("");
+
+
+    sRes.classList
+      .add("open");
+
+
+    sRes.querySelectorAll(
+      ".sr"
+    )
+    .forEach(
+      el => {
+
+        el.onclick = () => {
+
+          const p =
+            local[
+              +el.dataset.i
+            ];
+
+          goTo(
+            p[0],
+            p[1],
+            p[2]
+          );
+
+        };
+
+      }
+    );
+
+  }
+);
+
+
+function goTo(
+  name,
+  lat,
+  lng
+){
+
+  map.flyTo(
+    [
+      lat,
+      lng
+    ],
+    15,
+    {
+      duration:1.4
+    }
+  );
+
+
+  if(
+    searchMarker
+  ){
+
+    map.removeLayer(
+      searchMarker
+    );
+
+  }
+
+
+  searchMarker =
+    L.marker(
+      [
+        lat,
+        lng
+      ],
+      {
+        icon:
+          L.divIcon({
+            className:"",
+            html:
+              '<div class="search-pin"></div>',
+            iconSize:[
+              14,
+              14
+            ],
+            iconAnchor:[
+              7,
+              7
+            ]
+          })
+      }
+    )
+    .addTo(map)
+    .bindPopup(
+      `<b>📍 ${
+        esc(name)
+      }</b>
+      <br>
+      <small>
+        Click map here to set GPS coordinates
+      </small>`
+    )
+    .openPopup();
+
+
+  sRes.classList
+    .remove("open");
+
+  sIn.value =
+    name;
+
+  beep(
+    1000,
+    1300
+  );
+
+}
+
+
+sIn.addEventListener(
+  "keydown",
+  e => {
+
+    if(
+      e.key ===
+      "Enter"
+    ){
+
+      const f =
+        sRes.querySelector(
+          ".sr"
+        );
+
+      if(f)
+        f.click();
+
+    }
+
+
+    if(
+      e.key ===
+      "Escape"
+    ){
+
+      sRes.classList
+        .remove("open");
+
+    }
+
+  }
+);
+
+
+document.addEventListener(
+  "click",
+  e => {
+
+    if(
+      !e.target.closest(
+        ".searchbar"
+      )
+    ){
+
+      sRes.classList
+        .remove("open");
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   DETAIL PANEL
+========================================================= */
+
+const fmtT =
+  ts =>
+    new Date(
+      ts
+    ).toLocaleTimeString(
+      "en-GB"
+    );
+
+
+function openDetail(
+  id
+){
+
+  selectedId =
+    id;
+
+  renderDetail();
+
+  $("#detail")
+    .classList
+    .add("open");
+
+  renderFeed();
+
+}
+
+
+function closeDetail(){
+
+  selectedId =
+    null;
+
+  $("#detail")
+    .classList
+    .remove("open");
+
+  renderFeed();
+
+}
+
+
+function stageFromIncident(
+  inc
+){
+
+  const stages =
+    STAGES.map(
+      (label,i) => {
+
+        const done =
+          i < inc.stage;
+
+        const current =
+          i === inc.stage &&
+          inc.stage < 4;
+
+
+        let timestamp =
+          null;
+
+
+        if(
+          i === 0
+        ){
+          timestamp =
+            inc.created;
         }
 
-        function addIncidentToFeed(inc) {
-            const feed = document.getElementById('liveFeed');
-            const card = document.createElement('div');
-            card.className = `incident-card ${inc.severity.toLowerCase()} ${inc.severity === 'Critical' ? 'pulse' : ''}`;
-            card.id = `inc-${inc.id}`;
-            
-            card.innerHTML = `
-                <div class="incident-header">
-                    <span class="incident-type">${inc.type}</span>
-                    <span class="badge badge-${inc.status}">${inc.status}</span>
+        else if(
+          i === 1
+        ){
+          timestamp =
+            inc.acknowledgedAt;
+        }
+
+        else if(
+          i === 2
+        ){
+          timestamp =
+            null;
+        }
+
+        else if(
+          i === 3
+        ){
+          timestamp =
+            null;
+        }
+
+
+        return {
+
+          label,
+          done,
+          current,
+          timestamp
+
+        };
+
+      }
+    );
+
+
+  return stages;
+
+}
+
+
+function renderDetail(){
+
+  const inc =
+    incidents.find(
+      i =>
+        i.id ===
+        selectedId
+    );
+
+
+  if(!inc)
+    return;
+
+
+  const s =
+    SEV[inc.sev];
+
+
+  const location =
+    inc.location ||
+    (
+      Number.isFinite(
+        inc.lat
+      )
+        ? placeName(
+            inc.lat,
+            inc.lng
+          )
+        : "Location Pending"
+    );
+
+
+  const timeline =
+    stageFromIncident(
+      inc
+    );
+
+
+  $("#detail").innerHTML = `
+
+    <div class="d-head">
+
+      <span
+        class="pill"
+        style="
+          background:${s.color};
+          color:${
+            inc.sev === "medium"
+              ? "#3a2c00"
+              : "#fff"
+          }
+        ">
+
+        ${s.label}
+
+      </span>
+
+
+      <span class="d-id">
+
+        ${esc(inc.id)}
+
+      </span>
+
+
+      <button
+        id="dClose">
+
+        ✕
+
+      </button>
+
+    </div>
+
+
+    <div class="d-body">
+
+      <div class="d-type">
+
+        ${TYPES[inc.type].icon}
+
+        ${esc(
+          TYPES[inc.type].label
+        )}
+
+      </div>
+
+
+      <div class="d-loc">
+
+        📍
+        ${esc(location)}
+
+      </div>
+
+
+      <div class="d-meta">
+
+        COORDS
+        &nbsp;&nbsp;
+
+        ${
+          Number.isFinite(
+            inc.lat
+          )
+            ? inc.lat.toFixed(6)
+            : "—"
+        },
+
+        ${
+          Number.isFinite(
+            inc.lng
+          )
+            ? inc.lng.toFixed(6)
+            : "—"
+        }
+
+        <br>
+
+
+        REPORTED
+        &nbsp;
+
+        ${fmtT(
+          inc.created
+        )}
+
+        ·
+
+        ${elapsed(
+          now()-inc.created
+        )}
+
+        <br>
+
+
+        PRIORITY
+        &nbsp;&nbsp;
+
+        ${esc(
+          inc.priority
+        )}
+
+        <br>
+
+
+        STATUS
+        &nbsp;&nbsp;&nbsp;
+
+        ${esc(
+          inc.status
+        )}
+
+        <br>
+
+
+        PEOPLE AFFECTED
+        &nbsp;
+
+        ${
+          inc.people ??
+          "—"
+        }
+
+      </div>
+
+
+      <div class="ai-box">
+
+        🤖
+
+        <b>
+          AI ANALYSIS
+        </b>
+
+        <br>
+
+        SEVERITY:
+        <b>
+          ${s.label}
+        </b>
+
+        <br>
+
+        PRIORITY:
+        <b>
+          ${esc(
+            inc.priority
+          )}
+        </b>
+
+        <br>
+
+        SEVERITY SCORE:
+        <b>
+          ${
+            inc.score ??
+            "—"
+          }
+        </b>
+
+        <br>
+
+        AI CONFIDENCE:
+        <b>
+          ${
+            inc.conf != null
+              ? inc.conf + "%"
+              : "—"
+          }
+        </b>
+
+        <br>
+
+        SOURCE:
+        <b>
+          ${
+            esc(
+              inc.reporter
+            )
+          }
+        </b>
+
+      </div>
+
+
+      <div class="d-note">
+
+        ${esc(
+          inc.description
+        )}
+
+      </div>
+
+
+      <div class="sec-label">
+
+        INCIDENT TIMELINE
+
+      </div>
+
+
+      ${
+        timeline.map(
+          (item,i) => {
+
+            const delta =
+              item.timestamp &&
+              i > 0 &&
+              timeline[i-1]
+                .timestamp
+
+              ? `+${Math.round(
+                  (
+                    item.timestamp -
+                    timeline[i-1].timestamp
+                  ) / 1000
+                )}s`
+
+              : "";
+
+
+            return `
+
+              <div
+                class="tl-item ${
+                  item.done
+                    ? "done"
+                    : item.current
+                      ? "current"
+                      : "pending"
+                }">
+
+                <div class="tl-dot">
+
+                  ${
+                    item.done
+                      ? "✓"
+                      : item.current
+                        ? "●"
+                        : ""
+                  }
+
                 </div>
-                <div class="incident-loc">📍 ${inc.location} | <strong>${inc.severity}</strong></div>
-                <div class="incident-time">Reported: ${inc.time}</div>
-                <div class="incident-actions">
-                    ${inc.status === 'new' ? `<button class="btn btn-primary btn-sm" onclick="updateStatus(${inc.id}, 'acknowledged')">Acknowledge</button>` : ''}
-                    ${inc.status === 'acknowledged' ? `<button class="btn btn-success btn-sm" onclick="updateStatus(${inc.id}, 'resolved')">Resolve</button>` : ''}
-                    <button class="btn btn-sm" style="background:var(--border-color);color:white;" onclick="focusMap(${inc.lat}, ${inc.lng})">View on Map</button>
-                </div>
-            `;
-            
-            feed.prepend(card);
-        }
 
-        function updateStatus(id, newStatus) {
-            const inc = incidents.find(i => i.id === id);
-            if (inc) {
-                inc.status = newStatus;
-                // Re-render feed
-                document.getElementById('liveFeed').innerHTML = '';
-                incidents.forEach(i => addIncidentToFeed(i));
-                updateStats();
-            }
-        }
 
-        function focusMap(lat, lng) {
-            map.flyTo([lat, lng], 15);
-        }
+                <div>
 
-        function showToast(title, msg) {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            toast.innerHTML = `<div class="toast-title">${title}</div><div class="toast-msg">${msg}</div>`;
-            container.appendChild(toast);
-            setTimeout(() => toast.remove(), 5000);
-        }
+                  <div class="tl-label">
 
-        // ==========================================
-        // 4. FORM SUBMISSION & MAP MARKERS
-        // ==========================================
-        document.getElementById('incidentForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+                    ${item.label}
 
-            const imageInput = document.getElementById('accidentImage');
+                  </div>
 
-            if (!imageInput.files || imageInput.files.length === 0) {
-                showToast('Please select an accident image.', 'error');
-                return;
-            }
 
-            const imageFile = imageInput.files[0];
+                  <div class="tl-time">
 
-            const formData = new FormData();
-            formData.append('file', imageFile);
-
-            try {
-                showToast('Analyzing accident image...', 'info');
-
-                const response = await fetch('http://localhost:8000/incident/from-image',
-                    {
-                        method: 'POST',
-                        body: formData
+                    ${
+                      item.timestamp
+                        ? fmtT(
+                            item.timestamp
+                          )
+                        : "— —:— —"
                     }
-                );
 
-                const data = await response.json();
+                  </div>
 
-                if (!response.ok) {throw new Error(data.detail || 'Failed to create incident.');
-                }
+                </div>
 
-                console.log('AcciSense incident created:', data);
 
-                const incident = {
-                    id: data.incident_id,
-                    type: data.analysis.incident_type,
-                    severity: data.analysis.severity,
-                    score: data.analysis.severity_score,
-                    priority: data.analysis.priority,
-                    peopleAffected: data.analysis.people_affected,
-                    description: data.analysis.description,
-                    confidence: data.analysis.ai_confidence,
-                    location: data.location,
-                    status: data.status,
-                    createdAt: data.created_at
-                };
+                <div class="tl-delta">
 
-        
-                addIncidentToFeed(incident);
+                  ${delta}
 
-        
-                updateStats();
+                </div>
 
-        
-                imageInput.value = '';
+              </div>
 
-                showToast(`Incident ${data.incident_id} created successfully.`,'success'
-                );
+            `;
 
-            } catch (error) {
-                console.error('AcciSense error:', error);
+          }
+        ).join("")
+      }
 
-                showToast(error.message || 'Unable to connect to AcciSense backend.','error'
-                );
+
+      <div class="sec-label">
+
+        BACKEND STATUS
+
+      </div>
+
+
+      ${
+        inc.status ===
+        "Acknowledged"
+
+          ? `
+            <div class="closed-note">
+
+              ✔ INCIDENT ACKNOWLEDGED
+
+            </div>
+          `
+
+          : inc.status ===
+            "ESCALATED"
+
+            ? `
+              <div
+                class="closed-note"
+                style="color:var(--red)">
+
+                🚨 INCIDENT ESCALATED
+
+              </div>
+            `
+
+            : `
+              <div
+                style="
+                  font-family:var(--mono);
+                  font-size:10px;
+                  color:var(--yellow);
+                  text-align:center">
+
+                ⏳ WAITING FOR RESPONDER ACKNOWLEDGEMENT
+
+              </div>
+            `
+      }
+
+    </div>
+
+  `;
+
+
+  $("#dClose")
+    .onclick =
+      closeDetail;
+
+}
+
+
+/* =========================================================
+   MANUAL REPORT
+========================================================= */
+
+$("#reportForm")
+.addEventListener(
+  "submit",
+  async e => {
+
+    e.preventDefault();
+
+
+    const btn =
+      $("#dispatchBtn");
+
+
+    btn.disabled =
+      true;
+
+    btn.textContent =
+      "⏳ SENDING TO ACCISENSE...";
+
+
+    try{
+
+      const lat =
+        Number(
+          $("#fLoc")
+            .dataset.lat
+        );
+
+
+      const lng =
+        Number(
+          $("#fLoc")
+            .dataset.lng
+        );
+
+
+      const location =
+        $("#fLoc").value ||
+        "Location Pending";
+
+
+      const image =
+        $("#incidentImage")
+          .files[0];
+
+
+      let response;
+
+
+      /*
+       * If an image is supplied:
+       *
+       * /incident/from-image
+       *
+       * This runs the real image-analysis
+       * pipeline and triggers n8n.
+       */
+      if(image){
+
+        const formData =
+          new FormData();
+
+
+        formData.append(
+          "file",
+          image
+        );
+
+
+        formData.append(
+          "location",
+          location
+        );
+
+
+        if(
+          Number.isFinite(lat)
+        ){
+
+          formData.append(
+            "latitude",
+            lat
+          );
+
+        }
+
+
+        if(
+          Number.isFinite(lng)
+        ){
+
+          formData.append(
+            "longitude",
+            lng
+          );
+
+        }
+
+
+        response =
+          await fetch(
+            API_URL +
+            "/incident/from-image",
+            {
+              method:"POST",
+              body:formData
             }
-        });
+          );
 
-        function placeMarker(inc) {
-            const colorMap = { Critical: 'red', High: 'orange', Medium: 'yellow', Low: 'green' };
-            const icon = L.divIcon({
-                className: 'custom-marker',
-                html: `<div style="background:${colorMap[inc.severity]}; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(0,0,0,0.5);"></div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-            });
+      }
 
-            const marker = L.marker([inc.lat, inc.lng], { icon: icon }).addTo(map);
-            marker.bindPopup(`<b>${inc.type}</b><br>Severity: ${inc.severity}<br>${inc.location}`);
-            markers.push(marker);
-        }
 
-        // ==========================================
-        // 5. REAL-TIME SIMULATION ENGINE
-        // ==========================================
-        function simulateIncoming() {
-            const types = ["Vehicle Accident", "Multi-Vehicle Collision", "Pedestrian Incident", "Road Hazard", "Medical Emergency"];
-            const severities = ["Critical", "High", "Medium", "Low"];
-            
-            // Generate random coordinates near current map center
-            const center = map.getCenter();
-            const lat = center.lat + (Math.random() - 0.5) * 0.05;
-            const lng = center.lng + (Math.random() - 0.5) * 0.05;
-            
-            const type = types[Math.floor(Math.random() * types.length)];
-            const severity = severities[Math.floor(Math.random() * severities.length)];
-            const time = new Date().toLocaleTimeString();
+      /*
+       * Without image:
+       *
+       * /incident
+       *
+       * This creates a normal backend incident.
+       */
+      else{
 
-            const newInc = {
-                id: incidentIdCounter++,
-                type, severity, 
-                location: `${lat.toFixed(5)}, ${lng.toFixed(5)}`, 
-                time, status: 'new', lat, lng
-            };
+        const payload = {
 
-            incidents.unshift(newInc);
-            addIncidentToFeed(newInc);
-            updateStats();
-            placeMarker(newInc);
-            showToast(`📡 INCOMING DISPATCH`, `${type} detected via sensor network.`);
+          incident_type:
+            $("#fType").value,
 
-            if (severity === 'Critical' || severity === 'High') {
-                playEmergencyBeep();
+          location:
+
+            location,
+
+          severity_indicator:
+            $("#fSev").value,
+
+          description:
+            "Manual incident reported from AcciSense Supervisor Dashboard.",
+
+          latitude:
+            Number.isFinite(lat)
+              ? lat
+              : null,
+
+          longitude:
+            Number.isFinite(lng)
+              ? lng
+              : null
+
+        };
+
+
+        response =
+          await fetch(
+            API_URL +
+            "/incident",
+            {
+              method:"POST",
+
+              headers:{
+                "Content-Type":
+                  "application/json"
+              },
+
+              body:
+                JSON.stringify(
+                  payload
+                )
             }
-        }
+          );
 
-        // Auto-simulate an incident every 15-25 seconds to show "Live" capability to judges
-        setInterval(() => {
-            if (Math.random() > 0.5) simulateIncoming();
-        }, 15000);
+      }
 
-        // ==========================================
-        // 6. LIVE CLOCK & FAKE LATENCY
-        // ==========================================
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('liveClock').textContent = now.toLocaleTimeString() + " | " + now.toLocaleDateString();
-            // Fake network latency fluctuation
-            document.getElementById('latency').textContent = `${Math.floor(Math.random() * 30 + 20)}ms`;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
 
-    </script>
+      if(!response.ok){
+
+        const errorText =
+          await response.text();
+
+        throw new Error(
+          `Backend ${response.status}: ${errorText}`
+        );
+
+      }
+
+
+      const result =
+        await response.json();
+
+
+      log(
+        "BACKEND",
+        `Incident accepted by FastAPI · ${
+          result.incident_id ||
+          result.acci_id ||
+          "incident created"
+        }`,
+        "#38d9d0"
+      );
+
+
+      alertSound();
+
+
+      await loadIncidents();
+
+
+      const createdId =
+        result.incident_id ||
+        result.acci_id;
+
+
+      if(createdId){
+
+        openDetail(
+          createdId
+        );
+
+      }
+
+
+      $("#fLoc")
+        .value = "";
+
+
+      delete $("#fLoc")
+        .dataset.lat;
+
+      delete $("#fLoc")
+        .dataset.lng;
+
+
+      if(pickMarker){
+
+        map.removeLayer(
+          pickMarker
+        );
+
+        pickMarker =
+          null;
+
+      }
+
+
+      $("#incidentImage")
+        .value = "";
+
+
+    }catch(error){
+
+      console.error(
+        error
+      );
+
+
+      log(
+        "ERROR",
+        error.message,
+        "#ff4d5e"
+      );
+
+
+      alert(
+        "AcciSense backend error:\n\n" +
+        error.message
+      );
+
+    }
+
+
+    finally{
+
+      btn.disabled =
+        false;
+
+      btn.textContent =
+        "🚨 DISPATCH ALERT";
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   FORCE DETECTION
+========================================================= */
+
+$("#simBtn")
+.onclick = () => {
+
+  $("#incidentImage")
+    .click();
+
+};
+
+
+/*
+ * When the user chooses an image through
+ * Force Detection, immediately run it
+ * through the real image endpoint.
+ */
+
+$("#incidentImage")
+.addEventListener(
+  "change",
+  async () => {
+
+    if(
+      !$("#incidentImage")
+        .files.length
+    ){
+      return;
+    }
+
+
+    /*
+     * Do not auto-submit here if the image
+     * was selected through the manual form.
+     *
+     * Force Detection uses this flag.
+     */
+  }
+);
+
+
+/* =========================================================
+   REFRESH
+========================================================= */
+
+$("#refreshBtn")
+.onclick = async () => {
+
+  beep(
+    1000,
+    1300
+  );
+
+  log(
+    "SYNC",
+    "Synchronizing live incidents with FastAPI...",
+    "#38d9d0"
+  );
+
+  await loadIncidents();
+
+};
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
+
+$("#audioBtn")
+.onclick = function(){
+
+  audioOn =
+    !audioOn;
+
+
+  this.textContent =
+    audioOn
+      ? "🔊 Audio ON"
+      : "🔇 Audio OFF";
+
+
+  if(audioOn)
+    beep(
+      1200,
+      1200
+    );
+
+};
+
+
+/* =========================================================
+   CLOCK / UPTIME
+========================================================= */
+
+setInterval(
+  () => {
+
+    $("#clock")
+      .textContent =
+      new Date()
+        .toLocaleTimeString(
+          "en-GB"
+        );
+
+
+    const up =
+      (
+        now() -
+        bootT
+      ) / 1000 | 0;
+
+
+    $("#up")
+      .textContent =
+
+      [
+        up / 3600,
+        (up / 60) % 60,
+        up % 60
+
+      ]
+      .map(
+        v =>
+          String(
+            v | 0
+          ).padStart(
+            2,
+            "0"
+          )
+      )
+      .join(":");
+
+
+    renderFeed();
+
+
+    if(
+      selectedId
+    ){
+      renderDetail();
+    }
+
+  },
+  1000
+);
+
+
+/* =========================================================
+   AUTO SYNC
+========================================================= */
+
+setInterval(
+  () => {
+
+    loadIncidents();
+
+  },
+  5000
+);
+
+
+/* =========================================================
+   ESCAPE DETAIL
+========================================================= */
+
+document.addEventListener(
+  "keydown",
+  e => {
+
+    if(
+      e.key ===
+      "Escape"
+    ){
+
+      closeDetail();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   BOOT
+========================================================= */
+
+async function boot(){
+
+  log(
+    "SYSTEM",
+    "AcciSense Supervisor Dashboard starting...",
+    "#3ddc97"
+  );
+
+
+  log(
+    "SYSTEM",
+    "Connecting to FastAPI at " +
+      API_URL,
+    "#38d9d0"
+  );
+
+
+  buildChips();
+
+
+  await checkBackend();
+
+
+  await loadIncidents();
+
+
+  log(
+    "SYSTEM",
+    "Live Supabase incident stream connected.",
+    "#3ddc97"
+  );
+
+
+  log(
+    "SYSTEM",
+    "n8n dispatch engine remains responsible for alerting and escalation.",
+    "#38d9d0"
+  );
+
+}
+
+
+boot();
+
+</script>
+
 </body>
 </html>
