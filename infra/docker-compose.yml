@@ -1,0 +1,26 @@
+services:
+  api:
+    build: ../apps/api
+    ports: ["8000:8000"]
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - REDIS_URL=redis://redis:6379/0
+    depends_on: [redis]
+    volumes:
+      - ../apps/api:/app
+
+  worker:
+    build: ../apps/api
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - REDIS_URL=redis://redis:6379/0
+    depends_on: [redis]
+    volumes:
+      - ../apps/api:/app
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]

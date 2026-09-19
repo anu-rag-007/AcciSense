@@ -1,0 +1,16 @@
+{
+  "name": "accisense-web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "devDependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "@types/react": "19.3.0",
+    "typescript": "7.0.2"
+  }
+}

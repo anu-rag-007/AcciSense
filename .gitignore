@@ -149,3 +149,8 @@ n8n/database.sqlite*
 n8n/nodes/
 # backups
 *backup*.py
+
+venv/
+.venv/
+__pycache__/
+*.py[cod]
